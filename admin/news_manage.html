@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - จัดการข่าวสาร</title>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/news_manage.css" />
+  <script type="module" src="/src/js/news_manage.js"></script>
+</head>
+
+<body>
+  <div class="main-container">
+    <button class="nav-back-button" onclick="window.location.href = '/admin/dashboard.html'">
+      <i data-feather="arrow-left"></i> กลับแผงควบคุมหลัก
+    </button>
+
+    <div class="header">
+      <h1><i data-feather="bell"></i> จัดการข่าวสาร</h1>
+      <p>เขียนข่าวสาร ประกาศสำคัญ หรือโปรโมชั่นให้กับลูกค้า</p>
+    </div>
+
+    <!-- Create News Section -->
+    <div class="news-creator-card">
+      <h3><i data-feather="edit-3"></i> เขียนข่าวสารใหม่</h3>
+      <form id="createNewsForm">
+        <div class="form-group">
+          <label for="newsTitle">หัวข้อข่าวสาร</label>
+          <input type="text" id="newsTitle" placeholder="เช่น แจ้งวันหยุดสงกรานต์ปี 2570" required />
+        </div>
+
+        <div class="form-group">
+          <label for="newsDetail">รายละเอียด</label>
+          <textarea id="newsDetail" rows="5" placeholder="ระบุรายละเอียดข่าวสาร..." required></textarea>
+        </div>
+
+        <button type="submit" class="submit-button" id="btnPublish">
+          <i data-feather="send"></i> เผยแพร่ข่าวสาร
+        </button>
+      </form>
+    </div>
+
+    <!-- Active News List Section -->
+    <div class="active-news-section">
+      <h3><i data-feather="list"></i> ข่าวสารที่กำลังเผยแพร่</h3>
+      <div id="activeNewsContainer">
+        <div class="loading-message">กำลังโหลดรายการข่าวสาร...</div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

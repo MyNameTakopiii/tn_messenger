@@ -1,0 +1,124 @@
+body {
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  padding: 30px;
+}
+
+.main-container {
+  width: 100%;
+  max-width: 900px;
+}
+
+.header {
+  margin-bottom: 30px;
+  text-align: center;
+  position: relative;
+  padding-top: 50px;
+}
+
+.back-button-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 15px;
+  background: var(--primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.back-button-top:hover {
+  background: #102e70;
+}
+
+.header h1 {
+  font-size: 34px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.header p {
+  font-size: 16px;
+  color: var(--text-light);
+}
+
+.account-card {
+  background: var(--white);
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-top: 6px solid var(--primary);
+  margin-bottom: 10px; 
+}
+
+.card-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px dashed #f3f4f6;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: 500;
+  color: var(--text-light);
+  width: 150px;
+}
+
+.value {
+  font-weight: 600;
+  color: var(--text);
+  flex-grow: 1;
+  text-align: right;
+  word-break: break-all;
+}
+
+.status-active {
+  color: #10b981;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 50px;
+  color: var(--text-light);
+}
+
+.redirecting-message {
+  text-align: center;
+  padding: 50px;
+  color: #ef4444;
+  font-weight: 600;
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding-top: 30px;
+  }
+  .back-button-top {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+  .header h1 {
+    font-size: 28px;
+  }
+}

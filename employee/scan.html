@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TN Messenger Service - สแกน QR Code</title>
+
+  <script>
+    if (!localStorage.getItem("tn_employee_token")) {
+      window.location.href = "login_employee.html";
+    }
+  </script>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/scan.css" />
+  <script type="module" src="/src/js/scan.js"></script>
+  </head>
+
+  <body>
+    <div id="loading-overlay">
+      <div style="text-align: center">
+        <i
+          data-feather="loader"
+          style="
+            width: 48px;
+            height: 48px;
+            color: var(--primary);
+            animation: spin 1s linear infinite;
+          "
+        ></i>
+      </div>
+    </div>
+
+    <div class="scan-container" id="main-container">
+      <div id="mini-loader">
+        <i
+          data-feather="loader"
+          class="spin"
+          style="width: 24px; height: 24px; color: var(--success)"
+        ></i>
+      </div>
+      <i
+        data-feather="maximize"
+        id="header-icon"
+        style="
+          width: 32px;
+          height: 32px;
+          color: var(--primary);
+          margin-bottom: 5px;
+        "
+      ></i>
+      <h2>สแกน QR Code</h2>
+      <p class="scan-desc">สแกนรหัสพัสดุเพื่ออัปเดตสถานะ</p>
+
+      <div id="reader"></div>
+
+      <div id="result-container" class="result-success" style="display: none">
+        <span id="scan-result"></span>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <a href="home.html" class="nav-item">
+        <i data-feather="home"></i>
+        <span>หน้าหลัก</span>
+      </a>
+      <a href="scan.html" class="nav-item active">
+        <i data-feather="maximize"></i>
+        <span>สแกน</span>
+      </a>
+      <a href="list.html" class="nav-item">
+        <i data-feather="list"></i>
+        <span>รายการ</span>
+      </a>
+      <button onclick="handleLogout()" class="nav-item" style="color: #fda4af">
+        <i data-feather="log-out"></i>
+        <span>ออกจากระบบ</span>
+      </button>
+    </nav>
+
+
+  </body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - Dashboard ลูกค้า</title>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/customer_dashboard.css" />
+  <script type="module" src="/src/js/customer_dashboard.js"></script>
+</head>
+
+<body>
+  <div class="main-container">
+    <div class="header">
+      <h1>TN MESSENGER SERVICE</h1>
+      <p>ยินดีต้อนรับสู่ Dashboard ลูกค้า</p>
+    </div>
+
+    <div class="branch-section-title">
+      <i data-feather="map-pin" style="width:24px; height:24px;"></i> สาขาที่เปิดให้บริการ (ตามจังหวัด)
+    </div>
+
+    <div id="branchListContainer" class="loading-message">
+      กำลังโหลดข้อมูลสาขาที่ให้บริการ...
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-button" onclick="createWorkOrder()">
+        <i data-feather="file-text"></i> สร้างใบสั่งงาน
+      </button>
+
+      <button class="action-button action-status" onclick="checkStatus()">
+        <i data-feather="package"></i> เช็คสถานะ (Tracking)
+      </button>
+      
+      <button class="action-button action-news" onclick="checkNews()">
+        <i data-feather="bell"></i> เช็คข่าวสาร
+      </button>
+    </div>
+  </div>
+</body>
+
+</html>

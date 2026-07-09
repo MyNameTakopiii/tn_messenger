@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ติดตามสถานะงาน - TN Messenger</title>
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    <link rel="stylesheet" href="/src/styles/tracking_admin.css" />
+    <script type="module" src="/src/js/tracking_admin.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="btn-back-top" onclick="window.location.href='dashboard.html'; return false;">⬅ กลับหน้า Dashboard</a>
+        <div class="search-box">
+            <h1>ติดตามสถานะงาน</h1>
+            <div class="search-input-group">
+                <input type="text" id="orderInput" placeholder="กรอกเลขที่ใบสั่งงาน (เช่น 0001)" />
+                <button id="searchBtn" onclick="searchOrder()">ค้นหา</button>
+            </div>
+        </div>
+
+        <div id="loadingMsg">กำลังค้นหาข้อมูล...</div>
+        <div id="errorMsg"></div>
+
+        <div class="tracking-card" id="trackingCard">
+            <div class="card-header">
+                <div class="order-number">เลขที่ใบสั่งงาน</div>
+                <div class="order-id" id="displayOrderNo">-</div>
+            </div>
+
+            <div class="card-body">
+                <div class="info-section">
+                    <div class="info-title">ข้อมูลทั่วไป</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">ทีม</span>
+                            <span class="info-value" id="team">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">ผู้สั่งงาน</span>
+                            <span class="info-value" id="requester">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">เบอร์โทรศัพท์</span>
+                            <span class="info-value" id="phone">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">โครงการ</span>
+                            <span class="info-value" id="project">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">วันที่เก็บเอกสาร</span>
+                            <span class="info-value" id="collectDate">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">ลูกค้า</span>
+                            <span class="info-value" id="customer">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-title">สถานที่จัดส่ง</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">เลขที่/ถนน</span>
+                            <span class="info-value" id="addrStreet">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">แขวง/ตำบล</span>
+                            <span class="info-value" id="subdistrict">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">เขต/อำเภอ</span>
+                            <span class="info-value" id="district">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">จังหวัด/รหัสไปรษณีย์</span>
+                            <span class="info-value" id="province">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-section">
+                    <div class="info-title">สถานะการวิ่งงาน</div>
+                    <div class="timeline" id="timeline"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

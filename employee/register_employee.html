@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - ลงทะเบียนพนักงาน</title>
+
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/register_employee.css" />
+</head>
+
+<body>
+
+  <div class="register-container">
+    <div class="register-logo">TN</div>
+    <h2>ลงทะเบียนพนักงาน</h2>
+    <p>กรอกข้อมูลเพื่อสร้างบัญชีพนักงานใหม่</p>
+
+    <form onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="email" required>
+      </div>
+
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" id="password" minlength="6" required>
+        <i data-feather="eye-off" class="toggle-password" onclick="togglePassword()"></i>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>ชื่อ *</label>
+          <input type="text" id="firstName" required>
+        </div>
+        <div class="form-group">
+          <label>นามสกุล *</label>
+          <input type="text" id="lastName" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>ชื่อเล่น *</label>
+        <input type="text" id="nickname" required>
+      </div>
+
+      <div class="form-group">
+        <label>วันเกิด (ค.ศ.) *</label>
+        <input type="text" id="birthDate" placeholder="DD/MM/YYYY" readonly>
+      </div>
+
+      <div id="registerMessage" style="min-height:20px"></div>
+
+      <button class="register-button">
+        <i data-feather="user-plus"></i> สมัครสมาชิก
+      </button>
+    </form>
+
+    <div class="redirect-link">
+      มีบัญชีอยู่แล้ว? <a href="login_employee.html">เข้าสู่ระบบ</a>
+    </div>
+  </div>
+
+  <script type="module" src="/src/js/register_employee.js"></script>
+
+</body>
+
+</html>

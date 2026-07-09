@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - ข้อมูลบัญชีผู้ใช้</title>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/account_list.css" />
+  <script type="module" src="/src/js/account_list.js"></script>
+</head>
+<body>
+  <div class="main-container">
+    <div class="header">
+      <a href="/admin/dashboard.html" class="back-button-top">
+        <i data-feather="arrow-left"></i> กลับหน้า Dashboard
+      </a>
+      <h1>บัญชีผู้ใช้</h1>
+      <p>ข้อมูลบัญชีผู้ใช้ที่ล็อกอินเข้าสู่ระบบ</p>
+    </div>
+
+    <!-- 🟢 แสดงระหว่างโหลดข้อมูล -->
+    <div id="loading" class="loading-message">
+        <div class="loading-spinner" style="margin: 0 auto 15px;"></div>
+        <p>กำลังดึงข้อมูลบัญชีผู้ใช้...</p>
+    </div>
+
+    <!-- 🔴 แสดงถ้ายังไม่ได้ล็อกอินและระบบกำลังจะเด้งกลับ -->
+    <div id="redirectingMessage" class="redirecting-message">
+        <p>⚠️ ตรวจพบว่ายังไม่ได้เข้าสู่ระบบ กำลังนำคุณกลับไปหน้าล็อกอิน...</p>
+    </div>
+
+    <div class="account-card" id="accountCard" style="display: none;">
+      <div class="card-title">ข้อมูลส่วนตัว</div>
+      <div id="accountDetails">
+        <!-- ข้อมูลผู้ใช้จะถูกเติมที่นี่จาก JS -->
+      </div>
+    </div>
+  </div>
+</body>
+</html>

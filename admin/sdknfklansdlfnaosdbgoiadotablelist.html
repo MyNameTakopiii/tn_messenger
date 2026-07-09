@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📋 ตารางใบสั่งงาน (TN MESSENGER SERVICE)</title>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/tablelist.css" />
+  <script type="module" src="/src/js/tablelist.js"></script>
+</head>
+
+<body>
+  <div class="excel-box">
+    <div class="header-bar" style="display: flex; align-items: center; gap: 16px">
+      <a href="/admin/dashboard.html" class="btn-back-top" style="text-decoration: none; font-weight: 600">
+        ⬅ กลับหน้า Dashboard
+      </a>
+
+      <div style="display: flex; align-items: center; gap: 8px">
+        <button id="btnDownloadAll" class="btn-download-all" onclick="downloadAllPDF()">
+          📥 ดาวน์โหลดทั้งหมด (PDF)
+        </button>
+
+        <a href="/admin/index.html" class="link"> ＋ เพิ่มรายการใหม่ </a>
+      </div>
+
+      <div class="controls-wrapper">
+        <div class="search-filter-box">
+          <h1>📋 ตารางใบสั่งงาน (TN MESSENGER SERVICE)</h1>
+
+          <div class="date-filter-group">
+            <label>📅 วันที่เก็บเอกสาร (วัน/เดือน/พ.ศ.):</label>
+            <div class="date-input-wrapper">
+              <input type="text" id="dateFilterInput" placeholder="วัน/เดือน/ปี พ.ศ." />
+              <button id="clearDateFilterBtn" class="btn-clear-date-inside" title="ล้างวันที่กรอง" style="display: none" onclick="clearDateFilter()">
+                X
+              </button>
+            </div>
+          </div>
+
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 ค้นหา..." oninput="debouncedFilterTable()" />
+            <span id="countLabel"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="orderTable">
+        <thead>
+          <tr id="tableHeadRow"></tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr>
+            <td colspan="20" style="text-align: center; color: #6b7280">
+              ⏳ กำลังโหลดข้อมูล...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-bar" id="paginationBar">
+      <button type="button" id="btnPrevPage" class="btn-page" disabled>← ก่อนหน้า</button>
+      <span id="pageInfo">หน้า 1 / 1</span>
+      <button type="button" id="btnNextPage" class="btn-page" disabled>ถัดไป →</button>
+      <select id="pageSizeSelect" class="page-size-select">
+        <option value="50" selected>50 / หน้า</option>
+        <option value="100">100 / หน้า</option>
+      </select>
+    </div>
+  </div>
+</body>
+
+</html>

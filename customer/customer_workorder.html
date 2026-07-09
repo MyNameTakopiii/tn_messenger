@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>เพิ่มข้อมูลใบสั่งงาน</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/customer_workorder.css" />
+  <script type="module" src="/src/js/customer_workorder.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <a href="customer_dashboard.html" class="btn-back-top">⬅ กลับหน้า Dashboard</a>
+
+    <h1>ฟอร์มออกใบสั่งงาน</h1>
+    <h1>TN MESSENGER SERVICE</h1>
+    <form id="jobForm">
+      <h3>ข้อมูลทั่วไป</h3>
+      <label>E-mail
+        <input required name="email" type="email" />
+      </label>
+      <label>โครงการ
+        <select name="project" required>
+          <option value="">--เลือก--</option>
+        </select>
+      </label>
+
+      <label>วันที่เก็บเอกสาร (วัน/เดือน/พ.ศ.)
+        <input required name="collectDate" type="text" id="collectDateInput" placeholder="วันที่เก็บเอกสาร" />
+      </label>
+      <label>(ทีม)
+        <input name="team" required />
+      </label>
+      <label>ผู้สั่งงาน
+        <input name="requester" required />
+      </label>
+      <label>เบอร์โทรศัพท์ผู้สั่งงาน
+        <input name="requesterPhone" required />
+      </label>
+
+      <h3>รายละเอียดลูกค้า</h3>
+      <label>ลูกค้า*
+        <input name="customerName" required />
+      </label>
+      <label>เบอร์โทรศัพท์ลูกค้า*
+        <input name="customerPhone" required />
+      </label>
+
+      <h3>รายละเอียดที่อยู่*</h3>
+      <div class="loading" id="loading"></div>
+
+      <label>จังหวัด
+        <select name="province" id="province" required>
+          <option value="">-- เลือกจังหวัด --</option>
+        </select>
+      </label>
+      <label>เขต/อำเภอ
+        <select name="district" id="district" required disabled>
+          <option value="">-- เลือกเขต/อำเภอ --</option>
+        </select>
+      </label>
+      <label>แขวง/ตำบล
+        <select name="subdistrict" id="subdistrict" required disabled>
+          <option value="">-- เลือกแขวง/ตำบล --</option>
+        </select>
+      </label>
+      <label>รหัสไปรษณีย์
+        <input name="zipcode" id="zipcode" required readonly />
+      </label>
+      
+      <label>เลขที่/ถนน/ซอย
+        <input name="addrStreet" required />
+      </label>
+      <h3>เอกสารที่ต้องจัดเก็บ*</h3>
+      <ol class="checks" id="documentsChecklist">
+      </ol>
+
+      <label>หมายเหตุ
+        <textarea name="note" rows="3"></textarea>
+      </label>
+
+      <div class="row">
+        <button type="submit">บันทึก</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal สำหรับแจ้งระบบปิดทำการ -->
+  <div id="closedModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; box-sizing: border-box;">
+    <div class="modal-content" style="background: var(--white); padding: 35px 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);">
+      <div class="modal-icon" style="font-size: 56px; margin-bottom: 20px;">🕒</div>
+      <h2>ระบบปิดทำการ</h2>
+      <p>ขณะนี้อยู่นอกเวลาทำการ<br>ระบบเปิดให้สั่งงานได้จนถึงเวลา <strong>20:30 น.</strong></p>
+      <button onclick="closeModal()">ตกลง</button>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,97 @@
+body {
+  padding: 5px;
+  padding-bottom: 70px;
+  overflow: hidden;
+}
+
+.scan-container {
+  max-width: 480px;
+  width: 100%;
+  background: var(--white);
+  padding: 10px;
+  border-radius: 18px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-top: 6px solid var(--primary);
+  text-align: center;
+  margin-top: 2px;
+  position: relative;
+  transition: border 0.3s ease;
+}
+
+.scan-container.success-border {
+  border: 4px solid var(--success) !important;
+  border-top: 6px solid var(--success) !important;
+}
+
+#mini-loader {
+  display: none;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+}
+
+h2 {
+  color: var(--primary);
+  margin-bottom: 2px;
+  font-size: 1.1rem;
+}
+
+.scan-desc {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 10px;
+}
+
+#reader {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--border) !important;
+}
+
+/* Customize html5-qrcode UI */
+#reader__dashboard_section_csr button {
+  padding: 8px 16px;
+  background-color: var(--primary) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  margin: 10px 0;
+}
+
+#result-container {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 12px;
+  display: none;
+  word-break: break-all;
+}
+
+.result-success {
+  background: #ecfdf5;
+  color: var(--success);
+  border: 1px solid #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 15px;
+}
+
+.order-link-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.order-link-btn:hover {
+  background: var(--primary-light);
+}

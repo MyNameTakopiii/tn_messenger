@@ -1,0 +1,127 @@
+body {
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* REGISTER CONTAINER STYLES */
+.register-container {
+  width: 100%;
+  max-width: 420px;
+  background: var(--white);
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border-top: 8px solid var(--primary);
+  text-align: center;
+  margin: 20px;
+}
+
+.register-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 18px;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  margin: 0 auto 15px;
+}
+
+.register-container h2 {
+  font-size: 26px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.register-container p {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 30px;
+}
+
+.form-group {
+  text-align: left;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-family: 'Prompt', sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  transition: border-color 0.2s;
+  padding-right: 45px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(12px);
+  cursor: pointer;
+  color: var(--text-light);
+  z-index: 10;
+}
+
+.toggle-password:hover {
+  color: var(--primary);
+}
+
+.register-button {
+  width: 100%;
+  padding: 14px;
+  background: #059669;
+  color: var(--white);
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.register-button:hover {
+  background: #047857;
+}
+
+/* Message Styles */
+.message-success {
+  color: #059669;
+}
+
+.message-error {
+  color: #ef4444;
+}

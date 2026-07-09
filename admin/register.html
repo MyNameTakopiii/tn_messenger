@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - Register</title>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/register.css" />
+  <script type="module" src="/src/js/register.js"></script>
+</head>
+
+<body>
+
+  <div class="register-container">
+    <div class="register-logo">TN</div>
+    <h2>ลงทะเบียนผู้ใช้ใหม่</h2>
+    <p>สร้างบัญชีเพื่อเข้าถึงระบบจัดการใบสั่งงาน</p>
+
+    <form onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label for="email">อีเมล (Email)</label>
+        <input type="email" id="email" name="email" required placeholder="ใช้สำหรับเข้าสู่ระบบ" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">รหัสผ่าน (Password)</label>
+        <input type="password" id="password" name="password" required minlength="6"
+          placeholder="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" />
+        <i data-feather="eye-off" class="toggle-password" onclick="togglePasswordVisibility('password')"></i>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">ยืนยันรหัสผ่าน</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6"
+          placeholder="ป้อนรหัสผ่านซ้ำอีกครั้ง" />
+        <i data-feather="eye-off" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')"></i>
+      </div>
+
+      <div id="registerMessage"
+        style="text-align: center; margin-bottom: 15px; font-size: 14px; font-weight: 500; min-height: 20px;"></div>
+
+      <button type="submit" class="register-button">
+        <i data-feather="user-plus"></i> สมัครสมาชิก
+      </button>
+
+    </form>
+    
+  </div>
+
+</body>
+
+</html>

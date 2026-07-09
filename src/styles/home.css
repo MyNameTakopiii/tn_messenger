@@ -1,0 +1,76 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  padding-bottom: 80px; /* Adjust for bottom nav */
+}
+
+.home-container {
+  max-width: 480px;
+  width: 100%;
+  background: var(--white);
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border-top: 8px solid var(--primary);
+  text-align: center;
+}
+
+.user-avatar {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 20px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3);
+}
+
+h2 {
+  color: var(--primary);
+  margin-bottom: 5px;
+}
+
+.welcome-text {
+  font-size: 16px;
+  color: var(--text-light);
+  margin-bottom: 30px;
+}
+
+.info-card {
+  text-align: left;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 1px solid #e2e8f0;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 14px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 600;
+}

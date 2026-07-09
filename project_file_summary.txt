@@ -1,0 +1,71 @@
+สรุปหน้าที่ของแต่ละไฟล์ในโปรเจกต์ TN Messenger Service:
+
+1. 404.html
+   - หน้าแสดงเมื่อไม่พบหน้าที่ร้องขอ (Page Not Found)
+
+2. account_list.html
+   - แสดงข้อมูลบัญชีผู้ใช้ที่ล็อกอินอยู่ พร้อมรายละเอียดบัญชี
+
+3. customer_dashboard.html
+   - Dashboard สำหรับลูกค้า แสดงปุ่มนำทางไปยังฟีเจอร์ต่าง ๆ เช่น สร้างใบสั่งงาน, เช็คสถานะ, ข่าวสาร และแสดงรายชื่อสาขา
+
+4. customer_workorder.html
+   - ฟอร์มสำหรับลูกค้าเพื่อกรอกข้อมูลและสร้างใบสั่งงานใหม่
+
+5. dashboard.html
+   - หน้า Login และ Dashboard หลักของระบบ (หลังล็อกอินจะแสดงเมนูหลักสำหรับผู้ใช้)
+
+6. index.html
+   - ฟอร์มสำหรับสร้างใบสั่งงาน (คล้าย customer_workorder.html แต่ลิงก์กลับ Dashboard หลัก)
+
+7. news_page.html
+   - แสดงข่าวสารจาก Google Sheet ในรูปแบบรายการข่าว
+
+8. register.html
+   - ฟอร์มลงทะเบียนผู้ใช้ใหม่ (สมัครสมาชิก)
+
+9. sdknfklansdlfnaosdbgoiadotablelist.html
+   - หน้าตารางแสดงรายการใบสั่งงานทั้งหมด (เรียกข้อมูลจาก GS) รองรับการค้นหา, กรองวันที่ และดาวน์โหลด PDF
+
+10. tracking.html
+    - หน้าให้ลูกค้าค้นหาและติดตามสถานะใบสั่งงานด้วยเลขที่ใบสั่งงาน
+
+11. tracking_2.html
+    - หน้าแสดงสถานะงาน (เวอร์ชัน 2) สำหรับติดตามงานด้วยเลขที่ใบสั่งงาน
+
+12. tracking_admin.html
+    - หน้าแอดมินสำหรับค้นหาและติดตามสถานะใบสั่งงาน พร้อมปุ่มกลับ Dashboard
+
+13. update-status.html
+    - ฟอร์มสำหรับอัปเดตสถานะใบสั่งงาน เช่น เปลี่ยนสถานะ/เพิ่มหมายเหตุ โดยกรอกเลขที่ใบสั่งงาน
+
+14. font/
+    - โฟลเดอร์เก็บไฟล์ฟอนต์ที่ใช้ในโปรเจกต์
+
+--------------------------------------------------
+🎨 Project Styling & Design System
+--------------------------------------------------
+ส่วนประกอบ UI ทั้งหมดใช้ธีมเดียวกันเพื่อให้เป็นระเบียบ:
+
+1. Colors (CSS Variables):
+   - --primary: #1e3a8a (น้ำเงินเข้ม - สีหลัก)
+   - --primary-light: #3b82f6 (น้ำเงินสว่าง - Hover/Highlight)
+   - --text: #111827 (เทาเข้มเกือบดำ - ข้อความหลัก)
+   - --bg: #f3f4f6 (เทาอ่อน - พื้นหลังหน้าเว็บ)
+   - --white: #ffffff (ขาว - พื้นหลัง Card/Container)
+   - --border: #d1d5db (เทา - ขอบ Input)
+
+2. Typography:
+   - Font: 'Prompt', sans-serif (จาก Google Fonts)
+   - Sizes: h1 (26-34px), Label (14-15px), Body (14-16px)
+
+3. UI Patterns:
+   - Container/Card: มุมโค้ง (16px/18px), มีเงา (box-shadow เทาจางๆ), ขอบบนหนา 6px สี --primary
+   - Input/Select: มุมโค้ง (8px/10px), ขอบ 1px, เมื่อ Focus จะเปลี่ยนเป็นสี --primary-light และมีเงาฟุ้ง
+   - Button: พื้นหลัง --primary, มุมโค้ง (10px), ตัวหนา (600), มี Effect ยกตัวขึ้นเมื่อ Hover
+
+4. Libraries:
+   - Icons: Feather Icons
+   - Date Picker: Flatpickr (Custom ธีมน้ำเงิน)
+   - Database: Google Sheets (Google Apps Script)
+   - Auth: Firebase Authentication

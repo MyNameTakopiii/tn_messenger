@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - Login & Dashboard</title>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/dashboard.css" />
+  <script type="module" src="/src/js/dashboard.js"></script>
+</head>
+
+<body>
+
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-container">
+      <div class="login-logo">TN</div>
+      <h2>เข้าสู่ระบบ</h2>
+      <p>โปรดป้อนอีเมลและรหัสผ่านเพื่อเข้าถึงระบบ</p>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="email">อีเมล (Email)</label>
+          <input type="email" id="email" name="email" required placeholder="เช่น user@company.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">รหัสผ่าน (Password)</label>
+          <input type="password" id="password" name="password" required placeholder="รหัสผ่านของคุณ" />
+        </div>
+
+        <div id="loginMessage"
+          style="text-align: center; margin-bottom: 15px; font-size: 14px; font-weight: 500; min-height: 20px;"></div>
+
+        <button type="submit" class="login-button">
+          <i data-feather="log-in"></i> เข้าสู่ระบบ
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <div class="dashboard-wrapper" id="dashboardWrapper">
+
+    <div class="header">
+      <button class="logout-button" onclick="handleLogout()">
+        <i data-feather="log-out" style="width:18px; height:18px;"></i> ออกจากระบบ
+      </button>
+      <h1>TN MESSENGER SERVICE</h1>
+      <p>ระบบจัดการใบสั่งงานและติดตามการจัดส่ง</p>
+    </div>
+
+    <div class="dashboard-container">
+
+      <div class="cards-grid">
+
+        <div class="dashboard-card" onclick="window.location.href='/admin/index.html'">
+          <div class="card-icon">
+            <i data-feather="file-plus"></i>
+          </div>
+          <div class="card-title">เพิ่มข้อมูลใบสั่งงาน</div>
+          <div class="card-description">สร้างใบสั่งงานใหม่ บันทึกข้อมูลลูกค้าและเอกสาร</div>
+          <div class="card-action">สร้างใบสั่งงาน <i data-feather="arrow-right"></i></div>
+        </div>
+
+        <div class="dashboard-card" onclick="window.location.href='/admin/index.html#assignedEmployeeId'">
+          <div class="card-icon">
+            <i data-feather="user-check"></i>
+          </div>
+          <div class="card-title">มอบหมายงานพนักงาน</div>
+          <div class="card-description">เลือกพนักงานสำหรับใบสั่งงาน หรือมอบหมายหน้าที่</div>
+          <div class="card-action">มอบหมายงาน <i data-feather="arrow-right"></i></div>
+        </div>
+
+        <div class="dashboard-card" onclick="window.location.href='/admin/sdknfklansdlfnaosdbgoiadotablelist.html'">
+          <div class="card-icon">
+            <i data-feather="list"></i>
+          </div>
+          <div class="card-title">ตารางใบสั่งงาน</div>
+          <div class="card-description">รายการใบสั่งงานแบบแบ่งหน้า ค้นหาเร็วขึ้น พร้อมดาวน์โหลด PDF</div>
+          <div class="card-action">ดูตารางงาน <i data-feather="arrow-right"></i></div>
+        </div>
+
+        <div class="dashboard-card" onclick="window.location.href='/admin/tracking_admin.html'">
+          <div class="card-icon">
+            <i data-feather="truck"></i>
+          </div>
+          <div class="card-title">ติดตามสถานะงาน</div>
+          <div class="card-description">ตรวจสอบสถานะการจัดส่งด้วยเลขที่ใบสั่งงาน</div>
+          <div class="card-action">ติดตามงาน <i data-feather="arrow-right"></i></div>
+        </div>
+
+        <div class="dashboard-card" onclick="window.location.href='/admin/report_cover.html'">
+          <div class="card-icon">
+            <i data-feather="file-text"></i>
+          </div>
+          <div class="card-title">รายงานปกวัน</div>
+          <div class="card-description">สร้างรายงานจาก Sheet B ตามช่วงวันที่</div>
+          <div class="card-action">สร้างรายงาน <i data-feather="arrow-right"></i></div>
+        </div>
+
+        <div class="dashboard-card" onclick="window.location.href='/admin/news_manage.html'">
+          <div class="card-icon">
+            <i data-feather="bell"></i>
+          </div>
+          <div class="card-title">จัดการข่าวสาร</div>
+          <div class="card-description">เขียนและประกาศข่าวสาร โปรโมชั่น หรือวันหยุดให้ลูกค้าทราบ</div>
+          <div class="card-action">เขียนข่าวสาร <i data-feather="arrow-right"></i></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+
+</html>

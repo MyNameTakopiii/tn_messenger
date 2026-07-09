@@ -1,0 +1,417 @@
+body {
+  margin: 0;
+  font-family: "Prompt", sans-serif;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 30px;
+  overflow: hidden;
+}
+
+.flatpickr-calendar {
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  font-family: "Prompt", sans-serif;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected.inRange,
+.flatpickr-day.startRange.inRange,
+.flatpickr-day.endRange.inRange,
+.flatpickr-day:hover,
+.flatpickr-day.prevMonthDay:hover,
+.flatpickr-day.nextMonthDay:hover,
+.flatpickr-day.selected:focus,
+.flatpickr-day.startRange:focus,
+.flatpickr-day.endRange:focus,
+.flatpickr-day.selected.inRange:focus,
+.flatpickr-day.startRange.inRange:focus,
+.flatpickr-day.endRange.inRange:focus {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--white) !important;
+}
+
+.flatpickr-day {
+  font-size: 13px;
+}
+
+.excel-box {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-top: 6px solid var(--primary);
+  width: 100%;
+  max-width: 98%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 30px;
+  box-sizing: border-box;
+  height: calc(100vh - 60px);
+  max-height: calc(100vh - 60px);
+  overflow: hidden;
+  position: relative;
+}
+
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.controls-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  flex-grow: 1;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.header-bar h1 {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 26px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.header-bar .link {
+  background: var(--primary);
+  color: var(--white);
+  padding: 12px 25px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-bar .link:hover {
+  background: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.btn-download-all {
+  background: var(--primary);
+  color: var(--white);
+  padding: 12px 25px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: "Prompt", sans-serif;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+.btn-download-all:hover {
+  background: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.btn-download-all:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.search-filter-box {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-box input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+  width: 250px;
+  transition: border 0.2s;
+  background-color: #fdfdfd;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+.date-filter-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.date-filter-group label {
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.date-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.date-input-wrapper input[type="text"][id="dateFilterInput"] {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+  width: 160px;
+  padding-right: 30px;
+  font-family: "Prompt", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #fdfdfd;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+.search-box input:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.date-input-wrapper input[type="text"][id="dateFilterInput"]:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.btn-clear-date-inside {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+  font-family: "Prompt", sans-serif;
+  transition: background-color 0.2s;
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  height: 24px;
+  box-sizing: border-box;
+  width: 24px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.btn-clear-date-inside:hover {
+  background-color: #ef4444;
+  opacity: 1;
+}
+
+.btn-clear-date-inside:active {
+  background-color: #b91c1c;
+}
+
+.count-label {
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.table-wrapper {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  max-height: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 5200px;
+  font-size: 14px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  table-layout: fixed;
+}
+
+table th:nth-child(14) {
+  width: 250px;
+}
+
+thead th {
+  background: var(--primary);
+  color: var(--white);
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border: 1px solid var(--primary-light);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+thead th:hover {
+  background: var(--primary-light);
+  transform: scale(1.02);
+}
+
+thead th.pinned {
+  background: #3b82f6 !important;
+  position: sticky;
+  z-index: 3;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.15);
+}
+
+thead th.pinned::after {
+  content: " 📌";
+  font-size: 12px;
+}
+
+tbody td.pinned {
+  position: sticky;
+  z-index: 1;
+  background-color: #dbeafe !important;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+tbody tr:nth-child(even) td.pinned {
+  background: #bfdbfe !important;
+}
+
+tbody tr:hover td.pinned {
+  background: #93c5fd !important;
+}
+
+tbody td {
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  text-align: left;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  vertical-align: top;
+  background-color: var(--white);
+}
+
+tbody tr:nth-child(even) td {
+  background: #fcfcfd;
+}
+
+tbody tr:hover td {
+  background: #eff6ff;
+  transition: 0.15s;
+}
+
+.btn-print {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--white);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-print:hover {
+  background: var(--primary-light);
+}
+
+.btn-back-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  width: fit-content;
+  white-space: nowrap;
+  height: 44px;
+  box-sizing: border-box;
+  transition: 0.2s;
+}
+
+.btn-back-top:hover {
+  background: var(--primary-light);
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 0 0;
+  flex-shrink: 0;
+}
+
+.btn-page {
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Prompt", sans-serif;
+  font-size: 14px;
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-page:not(:disabled):hover {
+  background: var(--primary-light);
+  color: var(--white);
+  border-color: var(--primary-light);
+}
+
+.page-size-select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-family: "Prompt", sans-serif;
+}
+
+#pageInfo {
+  font-size: 14px;
+  color: var(--text);
+  min-width: 100px;
+  text-align: center;
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TN Messenger Service - ข่าวสาร</title>
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    <link rel="stylesheet" href="/src/styles/news_page.css" />
+    <script type="module" src="/src/js/news_page.js"></script>
+</head>
+
+<body>
+    <div class="main-container">
+        <button class="nav-back-button" onclick="window.location.href = '/customer/customer_dashboard.html'">
+            <i data-feather="arrow-left"></i> กลับหน้า Dashboard
+        </button>
+        <div class="header">
+            <h1><i data-feather="bell"></i> ข่าวสาร</h1>
+        </div>
+
+        <div id="newsContent">
+            <div class="loading-message">กำลังโหลดข้อมูลล่าสุด...</div>
+        </div>
+    </div>
+</body>
+
+</html>

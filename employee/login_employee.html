@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - เข้าสู่ระบบพนักงาน</title>
+
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/login_employee.css" />
+</head>
+
+<body>
+
+  <div class="login-container">
+    <div class="login-logo">TN</div>
+    <h2>เข้าสู่ระบบพนักงาน</h2>
+    <p>กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบ</p>
+
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="email" required>
+      </div>
+
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" id="password" minlength="6" required>
+        <i data-feather="eye-off" class="toggle-password" onclick="togglePassword()"></i>
+      </div>
+
+      <div id="loginMessage" style="min-height:20px; margin-bottom: 20px;"></div>
+
+      <button type="submit" class="login-button">
+        <i data-feather="log-in"></i> เข้าสู่ระบบ
+      </button>
+    </form>
+
+    <div class="redirect-link">
+      ยังไม่มีบัญชี? <a href="register_employee.html">ลงทะเบียนพนักงาน</a>
+    </div>
+  </div>
+
+  <script type="module" src="/src/js/login_employee.js"></script>
+
+</body>
+
+</html>

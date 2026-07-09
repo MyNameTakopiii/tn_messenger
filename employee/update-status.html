@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>📦 อัปเดตสถานะใบสั่งงาน</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/update_status.css" />
+  <script type="module" src="/src/js/update_status.js"></script>
+    <script>
+      // Protect Route
+      const token = localStorage.getItem("tn_employee_token");
+      if (!token) {
+        window.location.href = "login_employee.html";
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="box">
+      <h1>📦 อัปเดตสถานะใบสั่งงาน</h1>
+
+      <!-- UI สรุปผล -->
+      <div id="summary-container"></div>
+
+      <div id="fetch-loading">
+        <i data-feather="loader" class="spin" style="color: #2563eb"></i>
+        <p>กำลังดึงข้อมูลงาน...</p>
+      </div>
+
+      <form id="updateForm" style="display: none">
+        <label>เลขที่ใบสั่งงาน</label>
+        <input
+          type="text"
+          name="orderNo"
+          id="orderNoInput"
+          placeholder="เช่น 0001"
+          required
+        /><br />
+
+        <div class="input-group">
+          <label for="messengerName">👤 ชื่อพนักงาน (ผู้ทำการวิ่งงาน)</label>
+          <input
+            type="text"
+            name="messengerName"
+            id="messengerName"
+            placeholder="กรอกชื่อพนักงาน"
+            required
+          />
+        </div>
+
+        <div class="input-group" style="margin-top: 15px;">
+          <label for="customerName">👥 ชื่อลูกค้า</label>
+          <input
+            type="text"
+            id="customerName"
+            placeholder="ชื่อลูกค้า"
+            readonly
+            style="background: #f9fafb;"
+          />
+        </div>
+        <br />
+
+        <div class="result-section" id="section1">
+          <h3>🚚 ผลการวิ่งงาน 1</h3>
+          <label>สถานะ</label>
+          <select name="result1" id="result1" onchange="togglePostponeDate(1)">
+            <option value="">-- เลือกสถานะ --</option>
+            <option>สำเร็จ</option>
+            <option>ลูกค้าขอเลื่อน</option>
+            <option>ลูกค้าไม่รับสาย</option>
+            <option>พนักงานขอเลื่อน</option>
+            <option>ลูกค้าขอยกเลิก</option>
+            <option>ใบหน้างานซ้ำ</option>
+          </select>
+
+          <div id="date-postpone-container-1" class="date-reschedule-container">
+            <label>📅 วันที่ขอเลื่อนไปเป็นวันที่</label>
+            <input type="text" id="rescheduledDate1" name="rescheduledDate1" placeholder="คลิกเพื่อเลือกวันที่">
+          </div>
+
+          <label>หมายเหตุ</label>
+          <textarea
+            name="note1"
+            id="note1"
+            placeholder="บันทึกเพิ่มเติม..."
+          ></textarea>
+        </div>
+
+        <div class="result-section" id="section2">
+          <h3>🚚 ผลการวิ่งงาน 2</h3>
+          <label>สถานะ</label>
+          <select name="result2" id="result2" onchange="togglePostponeDate(2)">
+            <option value="">-- เลือกสถานะ --</option>
+            <option>สำเร็จ</option>
+            <option>ลูกค้าขอเลื่อน</option>
+            <option>ลูกค้าไม่รับสาย</option>
+            <option>พนักงานขอเลื่อน</option>
+            <option>ลูกค้าขอยกเลิก</option>
+            <option>ใบหน้างานซ้ำ</option>
+          </select>
+
+          <div id="date-postpone-container-2" class="date-reschedule-container">
+            <label>📅 วันที่ขอเลื่อนไปเป็นวันที่</label>
+            <input type="text" id="rescheduledDate2" name="rescheduledDate2" placeholder="คลิกเพื่อเลือกวันที่">
+          </div>
+
+          <label>หมายเหตุ</label>
+          <textarea
+            name="note2"
+            id="note2"
+            placeholder="บันทึกเพิ่มเติม..."
+          ></textarea>
+        </div>
+
+        <div class="result-section" id="section3">
+          <h3>🚚 ผลการวิ่งงาน 3</h3>
+          <label>สถานะ</label>
+          <select name="result3" id="result3" onchange="togglePostponeDate(3)">
+            <option value="">-- เลือกสถานะ --</option>
+            <option>สำเร็จ</option>
+            <option>ลูกค้าขอเลื่อน</option>
+            <option>ลูกค้าไม่รับสาย</option>
+            <option>พนักงานขอเลื่อน</option>
+            <option>ลูกค้าขอยกเลิก</option>
+            <option>ใบหน้างานซ้ำ</option>
+          </select>
+
+          <div id="date-postpone-container-3" class="date-reschedule-container">
+            <label>📅 วันที่ขอเลืารวิ่งงาน 1: หมายเหตุ"] = payload.note1;
+                  }
+                  if (payload.result2) {
+                    task["ผลการวิ่งงาน 2: สถานะ"] = payload.result2;
+                    task["ผลการวิ่งงาน 2: วัน/เดือน/ปี"] = payload.date2;
+                    task["ผลการวิ่งงาน 2: หมายเหตุ"] = payload.note2;
+                  }
+                  if (payload.result3) {
+                    task["ผลการวิ่งงาน 3: สถานะ"] = payload.result3;
+                    task["ผลการวิ่งงาน 3: วัน/เดือน/ปี"] = payload.date3;
+                    task["ผลการวิ่งงาน 3: หมายเหตุ"] = payload.note3;
+                  }
+                  
+                  // อัปเดตข้อมูลพนักงาน
+                  task["ชื่อพนักงาน"] = messengerName;
+                  task["รหัสพนักงาน"] = userData.id || "";
+                  
+                  localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
+                  console.log("Local cache updated for order:", cleanOrderNo);
+                }
+
+                showResult("success", "✅ อัปเดตสถานะสำเร็จ และบันทึกข้อมูลในเครื่องแล้ว!");
+              } else {
+                showResult(
+                  "error",
+                  "❌ เกิดข้อผิดพลาด: " +
+                    (response.message || "ไม่สามารถอัปเดตได้")
+                );
+              }
+
+              delete window[callbackName];
+              document.body.removeChild(script);
+            };
+
+            // ✅ ส่ง action=update และ data ไปยัง Apps Script
+            const script = document.createElement("script");
+            script.src = `${SCRIPT_URL}?callback=${callbackName}&action=update&data=${encodeURIComponent(
+              JSON.stringify(payload)
+            )}`;
+            script.onerror = function () {
+              submitBtn.disabled = false;
+              submitBtn.textContent = "💾 บันทึกสถานะ";
+              showResult("error", "❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+              delete window[callbackName];
+            };
+            document.body.appendChild(script);
+          } catch (error) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "💾 บันทึกสถานะ";
+            showResult("error", "❌ เกิดข้อผิดพลาด: " + error.message);
+          }
+        });
+
+      if (orderFromURL) document.getElementById("result1").focus();
+      else orderInput.focus();
+
+      feather.replace();
+
+      // ฟังก์ชันเปิด/ปิดช่องกรอกวันที่ขอเลื่อน
+      function togglePostponeDate(index) {
+        const select = document.getElementById(`result${index}`);
+        const container = document.getElementById(`date-postpone-container-${index}`);
+        const dateInput = document.getElementById(`rescheduledDate${index}`);
+
+        if (select.value === "ลูกค้าขอเลื่อน" || select.value === "พนักงานขอเลื่อน" || select.value === "ลูกค้าไม่รับสาย") {
+          container.style.display = "block";
+          if (!dateInput._flatpickr) {
+            flatpickr(dateInput, {
+              locale: "th",
+              altInput: true,
+              altFormat: "d/m/Y",
+              dateFormat: "d/m/Y",
+              defaultDate: "today",
+            });
+          }
+        } else {
+          container.style.display = "none";
+        }
+      }
+
+      function handleLogout() {
+        if (confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
+          localStorage.removeItem("tn_employee_token");
+          localStorage.removeItem("tn_employee_user");
+          window.location.href = "login_employee.html";
+        }
+      }
+    </script>
+  </body>
+</html>

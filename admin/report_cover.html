@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>รายงานปกวัน — TN Messenger</title>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/report_cover.css" />
+  <script type="module" src="/src/js/report_cover.js"></script>
+</head>
+<body>
+  <div class="container">
+    <a href="/admin/dashboard.html" class="back-link">← กลับ Dashboard</a>
+    <h1>รายงานปกวัน</h1>
+    <p class="subtitle">กรองข้อมูลจาก Sheet B ตามช่วงวันที่ — layout อ้างอิงแท็บ "16 มีนาคม"</p>
+
+    <div class="toolbar">
+      <div>
+        <label for="dateRange">ช่วงวันที่</label>
+        <input type="text" id="dateRange" placeholder="เลือกวันที่เริ่ม — สิ้นสุด" />
+      </div>
+      <button type="button" class="btn" id="btnGenerate">
+        <i data-feather="search"></i> สร้างรายงาน
+      </button>
+      <button type="button" class="btn btn-outline" id="btnPdf" disabled>
+        <i data-feather="download"></i> ดาวน์โหลด PDF
+      </button>
+    </div>
+
+    <div id="errorMsg" class="error" style="display:none;"></div>
+
+    <div class="preview-box" id="preview">
+      <div class="empty">เลือกช่วงวันที่แล้วกด "สร้างรายงาน"</div>
+    </div>
+  </div>
+</body>
+</html>

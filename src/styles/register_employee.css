@@ -1,0 +1,99 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.register-container {
+  max-width: 480px;
+  width: 100%;
+  background: var(--white);
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border-top: 8px solid var(--primary);
+  text-align: center;
+}
+
+.register-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 15px;
+  border-radius: 18px;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+h2 {
+  color: var(--primary);
+  margin-bottom: 5px;
+}
+
+p {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 30px;
+}
+
+.form-group {
+  text-align: left;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+label {
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+input {
+  padding: 12px 15px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(12px);
+  cursor: pointer;
+  color: var(--text-light);
+}
+
+.register-button {
+  background: #059669;
+}
+
+.register-button:hover {
+  background: #047857;
+}
+
+.redirect-link {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-top: 20px;
+}
+
+.redirect-link a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.redirect-link a:hover {
+  text-decoration: underline;
+}

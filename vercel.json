@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "outputDirectory": "dist",
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/404", "dest": "/404.html" },
+    { "src": "/", "dest": "/customer/landing.html" },
+    { "src": "/customer_dashboard.html", "dest": "/customer/customer_dashboard.html" },
+    { "src": "/customer_workorder.html", "dest": "/customer/customer_workorder.html" },
+    { "src": "/tracking.html", "dest": "/customer/tracking.html" },
+    { "src": "/tracking_2.html", "dest": "/customer/tracking_2.html" },
+    { "src": "/.*", "dest": "/404.html" }
+  ]
+}

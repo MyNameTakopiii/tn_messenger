@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TN Messenger Service - หน้าแรก</title>
+
+  <script>
+    if (!localStorage.getItem("tn_employee_token") || !localStorage.getItem("tn_employee_user")) {
+      window.location.href = 'login_employee.html';
+    }
+  </script>
+  <link rel="stylesheet" href="/src/styles/global.css" />
+  <link rel="stylesheet" href="/src/styles/home.css" />
+  <script type="module" src="/src/js/home.js"></script>
+</head>
+
+<body>
+  <div id="loading-overlay">
+    <div style="text-align: center;">
+      <i data-feather="loader" style="width: 48px; height: 48px; color: var(--primary); animation: spin 1s linear infinite;"></i>
+    </div>
+  </div>
+
+  <div class="home-container">
+    <div class="user-avatar" id="avatarText">U</div>
+    <h2 id="displayName">ยินดีต้อนรับ</h2>
+    <p class="welcome-text">ข้อมูลพนักงานของคุณในระบบ</p>
+
+    <div class="info-card">
+      <div class="info-item">
+        <span class="info-label">ID พนักงาน:</span>
+        <span class="info-value" id="userId">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">ชื่อผู้ใช้:</span>
+        <span class="info-value" id="userName">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">ชื่อเล่น:</span>
+        <span class="info-value" id="userNickname">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">ชื่อ:</span>
+        <span class="info-value" id="userFirstName">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">นามสกุล:</span>
+        <span class="info-value" id="userLastName">-</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">อีเมล:</span>
+        <span class="info-value" id="userEmail">-</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="home.html" class="nav-item active">
+      <i data-feather="home"></i>
+      <span>หน้าหลัก</span>
+    </a>
+    <a href="scan.html" class="nav-item">
+      <i data-feather="maximize"></i>
+      <span>สแกน</span>
+    </a>
+    <a href="list.html" class="nav-item" id="listNavLink">
+      <i data-feather="list"></i>
+      <span>รายการ</span>
+      <span class="task-count-badge" id="taskCountBadge">0</span>
+    </a>
+    <button onclick="handleLogout()" class="nav-item" style="color: #fda4af;">
+      <i data-feather="log-out"></i>
+      <span>ออกจากระบบ</span>
+    </button>
+  </nav>
+
+
+</body>
+
+</html>

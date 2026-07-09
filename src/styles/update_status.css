@@ -1,0 +1,187 @@
+body {
+  padding: 10px;
+  padding-bottom: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.box {
+  width: 100%;
+  max-width: 540px;
+  background: var(--white);
+  padding: 15px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+h1 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+  color: var(--text);
+}
+
+#orderInfo {
+  text-align: center;
+  color: var(--text-light);
+  margin-bottom: 15px;
+  font-size: 13px;
+}
+
+.order-badge {
+  display: inline-block;
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 5px 12px;
+  border-radius: 8px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.result-section {
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: none; /* ซ่อนไว้ก่อนทุกลำดับ */
+}
+
+.result-section h3 {
+  margin: 0 0 10px 0;
+  color: #374151;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-section.active {
+  border-color: var(--primary-light);
+  background: #eff6ff;
+}
+
+label {
+  display: block;
+  margin: 8px 0 4px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 13px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+input[readonly] {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+#resultMsg {
+  text-align: center;
+  margin-top: 18px;
+  font-weight: 500;
+  padding: 12px;
+  border-radius: 10px;
+  display: none;
+}
+
+#resultMsg.show {
+  display: block;
+}
+
+#resultMsg.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+#resultMsg.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+#resultMsg.loading {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.summary-card {
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 20px;
+  display: none;
+}
+
+.summary-card.success {
+  display: block;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.summary-card.error {
+  display: block;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #f87171;
+}
+
+.summary-card i {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 10px;
+}
+
+.summary-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.summary-detail {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+#fetch-loading {
+  text-align: center;
+  padding: 20px;
+  display: none;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+    padding-bottom: 90px;
+  }
+
+  .box {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+}
+
+/* เพิ่มสไตล์สำหรับ Date Picker */
+.date-reschedule-container {
+  display: none;
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #3b82f6;
+  border-radius: 10px;
+}
+
+.date-reschedule-container label {
+  color: #1e40af;
+  margin-top: 0;
+}
