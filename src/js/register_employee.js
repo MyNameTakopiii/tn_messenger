@@ -61,6 +61,7 @@ window.handleRegister = async function handleRegister(e) {
   const firstNameInput = document.getElementById('firstName');
   const lastNameInput = document.getElementById('lastName');
   const nicknameInput = document.getElementById('nickname');
+  const phoneInput = document.getElementById('phone');
   const birthDateInput = document.getElementById('birthDate');
   
   // แสดงสถานะกำลังโหลด
@@ -74,6 +75,7 @@ window.handleRegister = async function handleRegister(e) {
     email: emailInput.value,
     last_name: lastNameInput.value,
     nickname: nicknameInput.value,
+    phone: phoneInput.value,
     password: passwordInput.value,
     birth_day: birthDateInput.getAttribute("data-iso-date")
   };
