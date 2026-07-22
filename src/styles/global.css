@@ -109,47 +109,76 @@ button:disabled {
   left: 0;
   right: 0;
   background: var(--primary);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 12px 0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-around !important;
+  align-items: center !important;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  z-index: 10000 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: none;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  position: relative;
+.nav-item,
+button.nav-item,
+a.nav-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  position: relative !important;
+  width: 25% !important;
+  flex: 1 1 0 !important;
+  padding: 4px 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  transform: none !important;
+  box-sizing: border-box !important;
 }
 
 .nav-item.active {
-  color: white;
+  color: #ffffff !important;
+  font-weight: 700 !important;
 }
 
-.nav-item i {
-  margin-bottom: 4px;
-  width: 20px;
-  height: 20px;
+.nav-item i,
+.nav-item svg {
+  margin-bottom: 3px !important;
+  width: 22px !important;
+  height: 22px !important;
+  stroke-width: 2.2 !important;
+  display: block !important;
 }
 
-.nav-item:hover {
-  color: white;
+.nav-item span {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+.nav-item:hover,
+.nav-item:focus {
+  color: #ffffff !important;
+  background: transparent !important;
+  transform: none !important;
 }
 
 .task-count-badge {
   position: absolute;
-  top: -4px;
-  right: -8px;
+  top: -2px;
+  right: calc(50% - 16px);
   background: #ef4444;
   color: white;
   font-size: 10px;
@@ -161,6 +190,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   padding: 0 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 /* Loading state overlay */
