@@ -27,9 +27,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btnGenerate = document.getElementById("btnGenerate");
   const btnPdf = document.getElementById("btnPdf");
+  const teamSelect = document.getElementById("teamSelect");
+  const requesterSelect = document.getElementById("requesterSelect");
 
   if (btnGenerate) btnGenerate.addEventListener("click", fetchReport);
   if (btnPdf) btnPdf.addEventListener("click", downloadPdf);
+
+  if (teamSelect) teamSelect.addEventListener("change", () => renderPreview(reportData));
+  if (requesterSelect) requesterSelect.addEventListener("change", () => renderPreview(reportData));
 });
 
 function formatISO(d) {
@@ -61,7 +66,7 @@ function hideError() {
 
 async function fetchReport() {
   if (!startDate) {
-    showError("กรุณาเลือกช่วงวันที่");
+    showError("กรุณาเลือกช่วงวันที่เก็บเอกสาร");
     return;
   }
   if (!endDate) endDate = startDate;
@@ -83,12 +88,14 @@ async function fetchReport() {
       throw new Error(json.message || "ไม่สามารถโหลดรายงานได้");
     }
     reportData = json;
+    populateFilters(json);
     renderPreview(json);
     const btnPdf = document.getElementById("btnPdf");
     if (btnPdf) btnPdf.disabled = false;
   } catch (err) {
-    showError("⚠ " + err.message + " — ตรวจสอบว่า deploy Apps Script แล้ว (ดู apps-script/DEPLOY.md)");
+    showError("⚠ " + err.message);
     reportData = buildDemoReport();
+    populateFilters(reportData);
     renderPreview(reportData);
     const btnPdf = document.getElementById("btnPdf");
     if (btnPdf) btnPdf.disabled = false;
@@ -101,52 +108,183 @@ async function fetchReport() {
   }
 }
 
+function populateFilters(data) {
+  const teamSelect = document.getElementById("teamSelect");
+  const requesterSelect = document.getElementById("requesterSelect");
+
+  const teams = data.teams || extractUnique(data.rows || [], 'ทีม');
+  const requesters = data.requesters || extractUnique(data.rows || [], 'ผู้สั่งงาน');
+
+  if (teamSelect) {
+    const currentVal = teamSelect.value;
+    teamSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+    teams.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      if (t === currentVal) opt.selected = true;
+      teamSelect.appendChild(opt);
+    });
+  }
+
+  if (requesterSelect) {
+    const currentVal = requesterSelect.value;
+    requesterSelect.innerHTML = '<option value="">-- ทั้งหมด --</option>';
+    requesters.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r;
+      opt.textContent = r;
+      if (r === currentVal) opt.selected = true;
+      requesterSelect.appendChild(opt);
+    });
+  }
+}
+
+function extractUnique(rows, key) {
+  const set = {};
+  rows.forEach(r => {
+    const val = String(r[key] || '').trim();
+    if (val) set[val] = true;
+  });
+  return Object.keys(set).sort();
+}
+
 function buildDemoReport() {
   return {
     header: {
       company: "TN MESSENGER SERVICE",
-      title: "รายงานปกวัน",
+      title: "รายงานปกวัน (รายงานปิดวัน)",
       dateRange: `${toThaiDate(startDate)}${startDate !== endDate ? " - " + toThaiDate(endDate) : ""}`,
       generatedAt: new Date().toLocaleString("th-TH"),
     },
     rows: [],
+    teams: [],
+    requesters: [],
     totals: { count: 0 },
     _demo: true,
   };
+}
+
+function getFilteredRows(data) {
+  if (!data || !data.rows) return [];
+  const teamVal = document.getElementById("teamSelect")?.value || "";
+  const reqVal = document.getElementById("requesterSelect")?.value || "";
+
+  return data.rows.filter(row => {
+    const t = String(row['ทีม'] || '').trim();
+    const r = String(row['ผู้สั่งงาน'] || '').trim();
+
+    if (teamVal && t !== teamVal) return false;
+    if (reqVal && r !== reqVal) return false;
+    return true;
+  });
+}
+
+function groupRowsByTeamReqDate(rows) {
+  const groupsMap = {};
+
+  rows.forEach(row => {
+    const team = (row['ทีม'] || 'ไม่ระบุทีม').trim();
+    const requester = (row['ผู้สั่งงาน'] || 'ไม่ระบุผู้สั่งงาน').trim();
+    const collectDate = (row['วันที่เก็บเอกสาร'] || row['วันที่'] || '-').trim();
+
+    const groupKey = `${team}___${requester}___${collectDate}`;
+    if (!groupsMap[groupKey]) {
+      groupsMap[groupKey] = {
+        team,
+        requester,
+        collectDate,
+        items: []
+      };
+    }
+    groupsMap[groupKey].items.push(row);
+  });
+
+  return Object.values(groupsMap);
 }
 
 function renderPreview(data) {
   const preview = document.getElementById("preview");
   if (!preview) return;
 
-  const h = data.header || {};
-  const rows = data.rows || [];
-  const keys = rows.length ? Object.keys(rows[0]) : [];
-
-  let tableHtml = "";
-  if (rows.length && keys.length) {
-    tableHtml = `
-      <table class="report-table">
-        <thead>
-          <tr>${keys.map((k) => `<th>${k}</th>`).join("")}</tr>
-        </thead>
-        <tbody>
-          ${rows.map((row) => `<tr>${keys.map((k) => `<td>${row[k] ?? "-"}</td>`).join("")}</tr>`).join("")}
-        </tbody>
-      </table>`;
-  } else {
-    tableHtml = `<div class="empty">${data._demo ? "ไม่มีข้อมูล (demo mode — deploy get_cover_report ใน Apps Script)" : "ไม่พบข้อมูลในช่วงวันที่ที่เลือก"}</div>`;
+  if (!data || (!data.rows && !data._demo)) {
+    preview.innerHTML = '<div class="empty">เลือกช่วงวันที่แล้วกด "สร้างรายงาน"</div>';
+    return;
   }
+
+  const filteredRows = getFilteredRows(data);
+  const groups = groupRowsByTeamReqDate(filteredRows);
+  const h = data.header || {};
+
+  if (groups.length === 0) {
+    preview.innerHTML = `
+      <div class="cover-header">
+        <h2>${h.company || "TN MESSENGER SERVICE"}</h2>
+        <div style="font-size:16px;font-weight:600;margin-top:8px;">${h.title || "รายงานปกวัน (รายงานปิดวัน)"}</div>
+        <div class="cover-meta">วันที่เก็บเอกสาร: ${h.dateRange || "-"}</div>
+      </div>
+      <div class="empty">${data._demo ? "ไม่มีข้อมูลที่ตรงตามเงื่อนไข" : "ไม่พบข้อมูลตามเงื่อนไขที่เลือก"}</div>
+    `;
+    return;
+  }
+
+  let groupsHtml = groups.map(g => {
+    const rowsHtml = g.items.map((row, idx) => {
+      const orderNo = row['เลขที่ใบสั่งงาน'] || row['orderNo'] || '-';
+      const customer = row['ลูกค้า'] || '-';
+      const project = row['โครงการ'] || '-';
+      const docs = row['เอกสารที่ต้องจัดเก็บ'] || row['addrStreet'] || '-';
+      const messenger = row['ชื่อพนักงาน'] || row['มอบหมายพนักงาน'] || row['รหัสพนักงานที่มอบหมาย'] || '-';
+      const status = row['ผลการวิ่งงาน 1: สถานะ'] || row['สถานะ'] || 'รอดำเนินการ';
+
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><strong>#${String(orderNo).padStart(4, '0')}</strong></td>
+          <td>${customer}</td>
+          <td>${project}</td>
+          <td>${docs}</td>
+          <td>${messenger}</td>
+          <td>${status}</td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <div class="group-card">
+        <div class="group-header">
+          <div class="group-title">📌 ทีม: ${g.team}</div>
+          <div class="group-meta">ผู้สั่งงาน: <strong>${g.requester}</strong> | วันที่เก็บเอกสาร: <strong>${g.collectDate}</strong></div>
+        </div>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th style="width:110px;">เลขที่งาน</th>
+              <th>ลูกค้า</th>
+              <th>โครงการ</th>
+              <th>เอกสาร / รายละเอียด</th>
+              <th style="width:130px;">พนักงานจัดส่ง</th>
+              <th style="width:110px;">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+        <div class="group-subtotal">รวมย่อย: ${g.items.length} รายการ</div>
+      </div>
+    `;
+  }).join("");
 
   preview.innerHTML = `
     <div class="cover-header">
       <h2>${h.company || "TN MESSENGER SERVICE"}</h2>
-      <div style="font-size:16px;font-weight:600;margin-top:8px;">${h.title || "รายงานปกวัน"}</div>
-      <div class="cover-meta">วันที่: ${h.dateRange || "-"}</div>
-      <div class="cover-meta">สร้างเมื่อ: ${h.generatedAt || "-"}</div>
+      <div style="font-size:16px;font-weight:600;margin-top:8px;">${h.title || "รายงานปกวัน (รายงานปิดวัน)"}</div>
+      <div class="cover-meta">วันที่เก็บเอกสาร: ${h.dateRange || "-"} | สร้างเมื่อ: ${h.generatedAt || new Date().toLocaleString("th-TH")}</div>
     </div>
-    ${tableHtml}
-    <div class="totals">รวม ${(data.totals && data.totals.count) ?? rows.length} รายการ</div>
+    ${groupsHtml}
+    <div class="totals">รวมทั้งหมด ${filteredRows.length} รายการ (แบ่งเป็น ${groups.length} กลุ่มทีม/ผู้สั่งงาน)</div>
   `;
 }
 
@@ -161,62 +299,98 @@ function drawCoverReport(doc, data) {
   const margin = 15;
   let y = margin;
   const h = data.header || {};
-  const rows = data.rows || [];
+  const filteredRows = getFilteredRows(data);
+  const groups = groupRowsByTeamReqDate(filteredRows);
   const pageW = doc.internal.pageSize.getWidth();
 
   doc.setFont("Prompt", "bold");
   doc.setFontSize(18);
   doc.text(h.company || "TN MESSENGER SERVICE", pageW / 2, y, { align: "center" });
-  y += 10;
+  y += 9;
 
   doc.setFontSize(14);
-  doc.text(h.title || "รายงานปกวัน", pageW / 2, y, { align: "center" });
+  doc.text(h.title || "รายงานปกวัน (รายงานปิดวัน)", pageW / 2, y, { align: "center" });
   y += 8;
 
   doc.setFont("Prompt", "normal");
-  doc.setFontSize(11);
-  doc.text(`วันที่: ${h.dateRange || "-"}`, margin, y);
-  y += 6;
-  doc.text(`สร้างเมื่อ: ${h.generatedAt || "-"}`, margin, y);
-  y += 10;
+  doc.setFontSize(10);
+  doc.text(`วันที่เก็บเอกสาร: ${h.dateRange || "-"} | พิมพ์เมื่อ: ${h.generatedAt || new Date().toLocaleString("th-TH")}`, margin, y);
+  y += 8;
 
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageW - margin, y);
   y += 8;
 
-  if (rows.length === 0) {
-    doc.text("ไม่พบข้อมูลในช่วงวันที่ที่เลือก", margin, y);
+  if (groups.length === 0) {
+    doc.text("ไม่พบข้อมูลตามเงื่อนไขที่เลือก", margin, y);
     return;
   }
 
-  const keys = Object.keys(rows[0]);
-  const colW = (pageW - margin * 2) / Math.min(keys.length, 6);
-  const displayKeys = keys.slice(0, 6);
-
-  doc.setFont("Prompt", "bold");
-  doc.setFontSize(9);
-  displayKeys.forEach((k, i) => {
-    doc.text(String(k).substring(0, 18), margin + i * colW, y);
-  });
-  y += 6;
-
-  doc.setFont("Prompt", "normal");
-  doc.setFontSize(8);
-  rows.forEach((row) => {
-    if (y > doc.internal.pageSize.getHeight() - 20) {
+  groups.forEach((g) => {
+    if (y > doc.internal.pageSize.getHeight() - 35) {
       doc.addPage();
       y = margin;
     }
-    displayKeys.forEach((k, i) => {
-      const val = String(row[k] ?? "-").substring(0, 24);
-      doc.text(val, margin + i * colW, y);
+
+    doc.setFont("Prompt", "bold");
+    doc.setFontSize(11);
+    doc.setFillColor(238, 242, 255);
+    doc.rect(margin, y - 4, pageW - margin * 2, 7, "F");
+    doc.text(`ทีม: ${g.team} | ผู้สั่งงาน: ${g.requester} | วันที่เก็บเอกสาร: ${g.collectDate}`, margin + 2, y);
+    y += 7;
+
+    const cols = [
+      { name: "#", width: 10 },
+      { name: "เลขงาน", width: 22 },
+      { name: "ลูกค้า", width: 42 },
+      { name: "โครงการ", width: 35 },
+      { name: "พนักงาน", width: 35 },
+      { name: "สถานะ", width: 35 }
+    ];
+
+    doc.setFont("Prompt", "bold");
+    doc.setFontSize(9);
+    let x = margin;
+    cols.forEach(c => {
+      doc.text(c.name, x, y);
+      x += c.width;
     });
     y += 5;
+
+    doc.setFont("Prompt", "normal");
+    doc.setFontSize(8);
+
+    g.items.forEach((item, idx) => {
+      if (y > doc.internal.pageSize.getHeight() - 15) {
+        doc.addPage();
+        y = margin;
+      }
+      x = margin;
+      const orderNo = "#" + String(item['เลขที่ใบสั่งงาน'] || item['orderNo'] || '-').padStart(4, '0');
+      const customer = String(item['ลูกค้า'] || '-').substring(0, 20);
+      const project = String(item['โครงการ'] || '-').substring(0, 16);
+      const messenger = String(item['ชื่อพนักงาน'] || item['มอบหมายพนักงาน'] || '-').substring(0, 16);
+      const status = String(item['ผลการวิ่งงาน 1: สถานะ'] || item['สถานะ'] || 'รอดำเนินการ').substring(0, 16);
+
+      const vals = [String(idx + 1), orderNo, customer, project, messenger, status];
+      vals.forEach((v, cIdx) => {
+        doc.text(v, x, y);
+        x += cols[cIdx].width;
+      });
+      y += 4.5;
+    });
+
+    y += 2;
+    doc.setFont("Prompt", "bold");
+    doc.setFontSize(8.5);
+    doc.text(`รวมย่อย: ${g.items.length} รายการ`, pageW - margin - 35, y);
+    y += 7;
   });
 
-  y += 6;
+  y += 4;
   doc.setFont("Prompt", "bold");
-  doc.text(`รวม ${(data.totals && data.totals.count) ?? rows.length} รายการ`, margin, y);
+  doc.setFontSize(11);
+  doc.text(`รวมทั้งหมด ${filteredRows.length} รายการ (${groups.length} กลุ่ม)`, margin, y);
 }
 
 async function downloadPdf() {

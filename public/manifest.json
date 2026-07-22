@@ -1,0 +1,19 @@
+{
+  "name": "TN Messenger Service",
+  "short_name": "TN Messenger",
+  "description": "ระบบจัดการใบสั่งงานและติดตามสถานะการจัดส่ง TN Messenger",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/tn-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

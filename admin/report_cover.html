@@ -10,14 +10,26 @@
 </head>
 <body>
   <div class="container">
-    <a href="/admin/dashboard.html" class="back-link">← กลับ Dashboard</a>
-    <h1>รายงานปกวัน</h1>
-    <p class="subtitle">กรองข้อมูลจาก Sheet B ตามช่วงวันที่ — layout อ้างอิงแท็บ "16 มีนาคม"</p>
+    <a href="/admin/dashboard.html" class="btn-back-top">← กลับหน้า Dashboard</a>
+    <h1>รายงานปกวัน (รายงานปิดวัน)</h1>
+    <p class="subtitle">แสดงรายงานสรุปประจำวัน แยกกลุ่มตาม ทีม, ผู้สั่งงาน และ วันที่เก็บเอกสาร</p>
 
     <div class="toolbar">
       <div>
-        <label for="dateRange">ช่วงวันที่</label>
+        <label for="dateRange">ช่วงวันที่เก็บเอกสาร</label>
         <input type="text" id="dateRange" placeholder="เลือกวันที่เริ่ม — สิ้นสุด" />
+      </div>
+      <div>
+        <label for="teamSelect">ทีม</label>
+        <select id="teamSelect">
+          <option value="">-- ทั้งหมด --</option>
+        </select>
+      </div>
+      <div>
+        <label for="requesterSelect">ผู้สั่งงาน</label>
+        <select id="requesterSelect">
+          <option value="">-- ทั้งหมด --</option>
+        </select>
       </div>
       <button type="button" class="btn" id="btnGenerate">
         <i data-feather="search"></i> สร้างรายงาน

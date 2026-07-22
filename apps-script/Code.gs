@@ -335,33 +335,72 @@ function getCoverReport(data) {
   data = data || {};
   const startDate = (data.startDate || data.date || '').toString().trim();
   const endDate = (data.endDate || startDate || '').toString().trim();
-  if (!startDate) {
-    return { result: 'error', message: 'startDate required (YYYY-MM-DD)' };
+
+  let sheet = null;
+  const propSheetB = PropertiesService.getScriptProperties().getProperty('SHEET_B_ID');
+  if (propSheetB && propSheetB.length > 20) {
+    try {
+      const ssB = SpreadsheetApp.openById(propSheetB);
+      if (ssB) sheet = ssB.getSheets()[0];
+    } catch (e) {
+      console.warn("Could not open SHEET_B_ID: " + e.message + ". Falling back to active order sheet.");
+    }
   }
 
-  const ss = SpreadsheetApp.openById(SHEET_B_ID);
-  const sheet = ss.getSheets()[0];
-  const lastRow = sheet.getLastRow();
-  const lastCol = sheet.getLastColumn();
-  if (lastRow < 2) {
-    return { result: 'success', header: buildCoverHeader_(startDate, endDate), rows: [], totals: {} };
+  // Fallback to primary order sheet
+  if (!sheet) {
+    sheet = getOrderSheet_();
   }
 
-  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-  const dateColIdx = findColIndex_(headers, ['วันที่', 'date', 'วันที่เก็บเอกสาร', 'Date']);
-  const allData = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  if (!sheet || sheet.getLastRow() < 2) {
+    return {
+      result: 'success',
+      header: buildCoverHeader_(startDate, endDate),
+      rows: [],
+      teams: [],
+      requesters: [],
+      totals: { count: 0 }
+    };
+  }
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const dateColIdx = findColIndex_(headers, ['วันที่เก็บเอกสาร', 'วันที่', 'date', 'Date']);
+  const teamColIdx = findColIndex_(headers, ['ทีม', 'Team', 'team']);
+  const requesterColIdx = findColIndex_(headers, ['ผู้สั่งงาน', 'Requester', 'requester']);
+
+  const allData = sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).getValues();
   const rows = [];
+  const teamsMap = {};
+  const requestersMap = {};
 
   for (var i = 0; i < allData.length; i++) {
-    const rowDate = formatDateForFilter_(String(allData[i][dateColIdx] || ''));
-    if (rowDate < startDate || rowDate > endDate) continue;
-    rows.push(rowToObject_(headers, allData[i]));
+    const rowObj = rowToObject_(headers, allData[i]);
+    const teamVal = String(rowObj['ทีม'] || (teamColIdx >= 0 ? allData[i][teamColIdx] : '') || '').trim();
+    const requesterVal = String(rowObj['ผู้สั่งงาน'] || (requesterColIdx >= 0 ? allData[i][requesterColIdx] : '') || '').trim();
+
+    if (teamVal) teamsMap[teamVal] = true;
+    if (requesterVal) requestersMap[requesterVal] = true;
+
+    if (startDate) {
+      const rawDateStr = String((dateColIdx >= 0 ? allData[i][dateColIdx] : '') || rowObj['วันที่เก็บเอกสาร'] || '');
+      const rowDate = formatDateForFilter_(rawDateStr);
+
+      if (endDate) {
+        if (rowDate < startDate || rowDate > endDate) continue;
+      } else {
+        if (rowDate !== startDate) continue;
+      }
+    }
+
+    rows.push(rowObj);
   }
 
   return {
     result: 'success',
     header: buildCoverHeader_(startDate, endDate),
     rows: rows,
+    teams: Object.keys(teamsMap).sort(),
+    requesters: Object.keys(requestersMap).sort(),
     totals: {
       count: rows.length
     }

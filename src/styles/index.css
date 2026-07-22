@@ -135,21 +135,29 @@ label {
 .btn-back-top {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--primary);
-  color: white;
-  padding: 6px 14px;
-  border-radius: 8px;
+  gap: 8px;
+  background: var(--white);
+  color: var(--primary);
+  border: 1px solid rgba(30, 58, 138, 0.18);
+  padding: 10px 18px;
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
+  width: fit-content;
   white-space: nowrap;
-  margin-bottom: 15px;
-  transition: 0.2s;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+  cursor: pointer;
 }
 
 .btn-back-top:hover {
-  background: var(--primary-light);
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.25);
 }
 
 .top-nav {
