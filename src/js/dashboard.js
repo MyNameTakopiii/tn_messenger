@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
 import feather from 'feather-icons';
+import '../utils/pwa-install.js';
 
 // Initialize feather icons
 feather.replace();

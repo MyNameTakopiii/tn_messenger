@@ -1,6 +1,7 @@
 // src/js/login_employee.js
 import feather from 'feather-icons';
 import { postData, SCRIPT_URL_ORDER } from '../config/api.js';
+import '../utils/pwa-install.js';
 
 // ตรวจสอบ Token ถ้ามีให้ไปหน้า Home ทันที
 if (localStorage.getItem("tn_employee_token")) {

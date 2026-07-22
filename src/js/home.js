@@ -2,6 +2,7 @@
 import feather from 'feather-icons';
 import { loadMergedTasks } from '../utils/tn-employee-tasks.js';
 import { showConfirmModal } from '../utils/modal.js';
+import '../utils/pwa-install.js';
 
 // Protect Route: ตรวจสอบ Token ทันที
 const token = localStorage.getItem("tn_employee_token");

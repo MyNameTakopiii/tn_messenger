@@ -160,8 +160,18 @@
           <div class="card-action">เข้าใช้งาน <i data-feather="arrow-right"></i></div>
         </a>
       </div>
+
+      <div style="margin-top: 24px; text-align: center;">
+        <button class="btn-pwa-install" data-pwa-install style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: white; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(30, 58, 138, 0.3);">
+          <i data-feather="download"></i> 📲 ติดตั้งแอป TN Messenger ลงมือถือ
+        </button>
+      </div>
     </div>
   </div>
-  <script>feather.replace();</script>
+  <script type="module">
+    import feather from 'feather-icons';
+    import '/src/utils/pwa-install.js';
+    feather.replace();
+  </script>
 </body>
 </html>
