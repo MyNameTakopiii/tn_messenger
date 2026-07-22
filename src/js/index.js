@@ -5,6 +5,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 import QRCode from 'qrcode';
 import {
   postData,
+  jsonp,
   fetchAddressData,
   fetchProjectList,
   fetchDocumentsList,
@@ -242,9 +243,17 @@ function attachDocumentClickListener() {
 async function loadEmployeeList() {
   if (!employeeSelect) return;
   try {
-    const json = await postData(SCRIPT_URL_ORDER, "get_employee_list", {});
+    let json;
+    try {
+      json = await jsonp(SCRIPT_URL_ORDER, { action: "get_employee_list" });
+    } catch (_) {
+      json = await postData(SCRIPT_URL_ORDER, "get_employee_list", {});
+    }
     console.log("loadEmployeeList raw response:", json);
-    if (json.result !== "success" || !Array.isArray(json.data)) return;
+    if (json.result !== "success" || !Array.isArray(json.data)) {
+      console.warn("⚠️ ไม่พบข้อมูลพนักงาน หรือ Apps Script บน Google Sheets ยังไม่ได้อัปเดต Deploy โค้ดใหม่จาก apps-script/Code.gs");
+      return;
+    }
     
     // Clear dynamic options (keeping the placeholder)
     employeeSelect.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';

@@ -1,6 +1,6 @@
 // src/js/api.js
 
-export const SCRIPT_URL_ORDER = import.meta.env.VITE_SCRIPT_URL_ORDER || "https://script.google.com/macros/s/AKfycbwHE9ny5WPLHDIKftEzRrc0kJWpoB7o7h9j7jGpJ-eIjNXCCbcyxSEyZG_pPS6HSPeS3g/exec";
+export const SCRIPT_URL_ORDER = import.meta.env.VITE_SCRIPT_URL_ORDER || "https://script.google.com/macros/s/AKfycbwAkCCMxsJDZo-K_w9CbuKf3221D8rStAwmDGiosRTPVJDrGumZWqMigsVzCB8Snz2Y1w/exec";
 export const SCRIPT_URL_DATA = import.meta.env.VITE_SCRIPT_URL_DATA || "https://script.google.com/macros/s/AKfycbyq3DjZ8ZulzWSq4yu6vvp4HGvkLaK_WqMjAYiBYb5xWcpaHxsNKoupPa133Nkajj4r0w/exec";
 export const SHEET_A_ID = import.meta.env.VITE_SHEET_A_ID || "1FkcnGM31UU1UNgsPyCrl95Jp1NDO98RlXpeU9a0eg_M";
 

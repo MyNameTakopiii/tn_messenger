@@ -128,7 +128,7 @@
 
       // ========== URL ระบบใบสั่งงาน ==========(สำหรับการบันทึกข้อมูล)
       const SCRIPT_URL_ORDER = (window.TN_CONFIG && window.TN_CONFIG.SCRIPT_URL_ORDER) ||
-        "https://script.google.com/macros/s/AKfycbwutGjM8fg__QRCBYBiDsCJ8ttkQ-97v8gER_C_W7VB4TG5-vvX5doUXlbGc5bvZYM5/exec";
+        "https://script.google.com/macros/s/AKfycbwAkCCMxsJDZo-K_w9CbuKf3221D8rStAwmDGiosRTPVJDrGumZWqMigsVzCB8Snz2Y1w/exec";
 
       // ========== URL รวมทั้ง Address + Project + Document ==========(สำหรับการดึงข้อมูล)
       const SCRIPT_URL_DATA = (window.TN_CONFIG && window.TN_CONFIG.SCRIPT_URL_DATA) ||
@@ -606,18 +606,42 @@
         const select = document.getElementById("assignedEmployeeId");
         if (!select) return;
         try {
-          const res = await fetch(`${SCRIPT_URL_ORDER}?action=get_employee_list`);
-          const json = await res.json();
-          if (json.result !== "success" || !Array.isArray(json.data)) return;
-          json.data.forEach((emp) => {
-            const opt = document.createElement("option");
-            opt.value = emp.id;
-            const label = emp.nickname
-              ? `${emp.name} (${emp.nickname}) — ${emp.id}`
-              : `${emp.name} — ${emp.id}`;
-            opt.textContent = label;
-            select.appendChild(opt);
-          });
+          const cbName = "jsonp_emp_" + Math.random().toString(36).substring(2, 10);
+          window[cbName] = function(json) {
+            delete window[cbName];
+            if (json.result !== "success" || !Array.isArray(json.data)) return;
+            select.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+            json.data.forEach((emp) => {
+              const opt = document.createElement("option");
+              opt.value = emp.id;
+              const label = emp.nickname
+                ? `${emp.name} (${emp.nickname}) — ${emp.id}`
+                : `${emp.name} — ${emp.id}`;
+              opt.textContent = label;
+              select.appendChild(opt);
+            });
+          };
+          const s = document.createElement("script");
+          s.src = `${SCRIPT_URL_ORDER}?callback=${cbName}&action=get_employee_list`;
+          s.onerror = async () => {
+            delete window[cbName];
+            try {
+              const res = await fetch(`${SCRIPT_URL_ORDER}?action=get_employee_list`);
+              const json = await res.json();
+              if (json.result !== "success" || !Array.isArray(json.data)) return;
+              select.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+              json.data.forEach((emp) => {
+                const opt = document.createElement("option");
+                opt.value = emp.id;
+                const label = emp.nickname
+                  ? `${emp.name} (${emp.nickname}) — ${emp.id}`
+                  : `${emp.name} — ${emp.id}`;
+                opt.textContent = label;
+                select.appendChild(opt);
+              });
+            } catch (_) {}
+          };
+          document.body.appendChild(s);
         } catch (err) {
           console.warn("โหลดรายชื่อพนักงานไม่สำเร็จ (deploy Apps Script ก่อน):", err);
         }

@@ -226,58 +226,47 @@ function rowToObject_(headers, row) {
 
 function getEmployeeList() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(EMPLOYEE_TAB);
+  let sheet = null;
+  const candidateNames = [EMPLOYEE_TAB, 'employee_user', 'employee', 'employees', 'user', 'users', 'User', 'Employees'];
+  
+  for (var i = 0; i < candidateNames.length; i++) {
+    const s = ss.getSheetByName(candidateNames[i]);
+    if (s && s.getLastRow() >= 2) {
+      sheet = s;
+      break;
+    }
+  }
+
   if (!sheet) {
     const sheets = ss.getSheets();
     sheet = sheets.find(function (s) {
-      return s.getName().indexOf('พนักงาน') >= 0;
+      const n = s.getName().toLowerCase();
+      return (n.indexOf('พนักงาน') >= 0 || n.indexOf('employee') >= 0 || n.indexOf('user') >= 0) && s.getLastRow() >= 2;
     });
   }
 
   let employees = [];
 
-  // 1. Try to read from 'พนักงาน' sheet
   if (sheet && sheet.getLastRow() >= 2) {
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).getValues();
     const idIdx = findColIndex_(headers, ['id', 'รหัสพนักงาน', 'ID']);
     const nameIdx = findColIndex_(headers, ['username', 'ชื่อ', 'first_name', 'name']);
+    const lastIdx = findColIndex_(headers, ['last_name', 'นามสกุล']);
     const nickIdx = findColIndex_(headers, ['nickname', 'ชื่อเล่น']);
 
     employees = data.map(function (row) {
+      const idVal = String(row[idIdx] || '').trim();
+      const firstName = String(row[nameIdx] || '').trim();
+      const lastName = lastIdx >= 0 ? String(row[lastIdx] || '').trim() : '';
+      const nickVal = nickIdx >= 0 ? String(row[nickIdx] || '').trim() : '';
+      const fullName = lastName ? `${firstName} ${lastName}` : firstName;
       return {
-        id: String(row[idIdx] || '').trim(),
-        name: String(row[nameIdx] || '').trim(),
-        nickname: String(row[nickIdx] || '').trim()
+        id: idVal,
+        name: fullName,
+        nickname: nickVal
       };
     }).filter(function (e) { return e.id; });
-  }
-
-  // 2. If 'พนักงาน' sheet has no data, fallback to 'employee_user' sheet
-  if (employees.length === 0) {
-    const userSheet = ss.getSheetByName('employee_user');
-    if (userSheet && userSheet.getLastRow() >= 2) {
-      const headers = userSheet.getRange(1, 1, 1, userSheet.getLastColumn()).getValues()[0];
-      const data = userSheet.getRange(2, 1, userSheet.getLastRow() - 1, headers.length).getValues();
-      const idIdx = findColIndex_(headers, ['id', 'ID']);
-      const userIdx = findColIndex_(headers, ['username', 'ชื่อ', 'first_name', 'name']);
-      const lastIdx = findColIndex_(headers, ['last_name', 'นามสกุล']);
-      const nickIdx = findColIndex_(headers, ['nickname', 'ชื่อเล่น']);
-
-      employees = data.map(function (row) {
-        const idVal = String(row[idIdx] || '').trim();
-        const firstName = String(row[userIdx] || '').trim();
-        const lastName = String(row[lastIdx] || '').trim();
-        const nickVal = String(row[nickIdx] || '').trim();
-        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
-        
-        return {
-          id: idVal,
-          name: fullName,
-          nickname: nickVal
-        };
-      }).filter(function (e) { return e.id; });
-    }
   }
 
   return { result: 'success', data: employees };
