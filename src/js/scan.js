@@ -1,8 +1,9 @@
 // src/js/scan.js
 import feather from 'feather-icons';
 import { Html5Qrcode } from 'html5-qrcode';
-import { jsonp, SCRIPT_URL_ORDER } from '../config/api.js';
+import { jsonp, postData, SCRIPT_URL_ORDER } from '../config/api.js';
 import { showConfirmModal } from '../utils/modal.js';
+import '../utils/pwa-install.js';
 
 // Protect Route
 const token = localStorage.getItem("tn_employee_token");
@@ -13,77 +14,180 @@ if (!token) {
 // Initialize feather icons
 feather.replace();
 
+let isScanning = true;
+let scannedSessionMap = new Set();
+let sessionLogItems = [];
+
 document.addEventListener("DOMContentLoaded", () => {
-  // ซ่อน loading
+  // Hide loading overlay
   setTimeout(() => {
     const overlay = document.getElementById("loading-overlay");
     if (overlay) overlay.style.display = "none";
     startScanner();
+    updateBatchCounter();
   }, 500);
 });
 
-let isScanning = true;
+function getEmployeeUser() {
+  try {
+    return JSON.parse(localStorage.getItem("tn_employee_user") || "{}");
+  } catch (_) {
+    return {};
+  }
+}
+
+function updateBatchCounter() {
+  const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+  const today = new Date().toISOString().split('T')[0];
+  let countToday = 0;
+
+  Object.values(storedTasks).forEach(t => {
+    if (t.scan_date === today || t._source === 'assigned') {
+      countToday++;
+    }
+  });
+
+  const batchCountEl = document.getElementById("batchCount");
+  const btnTaskCountEl = document.getElementById("btnTaskCount");
+  if (batchCountEl) batchCountEl.textContent = countToday;
+  if (btnTaskCountEl) btnTaskCountEl.textContent = countToday;
+}
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById("toastAlert");
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.className = `toast-alert ${type}`;
+  toast.style.display = "block";
+
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 3500);
+}
+
+function addLogItem(orderNo, customer, project) {
+  const logItemsContainer = document.getElementById("logItems");
+  if (!logItemsContainer) return;
+
+  sessionLogItems.unshift({ orderNo, customer, project, time: new Date().toLocaleTimeString('th-TH') });
+
+  const emptyLog = logItemsContainer.querySelector(".empty-log");
+  if (emptyLog) emptyLog.remove();
+
+  const paddedOrder = `#${String(orderNo).padStart(4, '0')}`;
+  const itemCard = document.createElement("div");
+  itemCard.className = "log-item-card";
+  itemCard.innerHTML = `
+    <div>
+      <span class="log-item-order">${paddedOrder}</span>
+      <span class="log-item-customer"> - ${customer || 'ลูกค้าทั่วไป'} (${project || '-'})</span>
+    </div>
+    <span style="font-size: 11px; color: #10b981; font-weight: 600;">✅ รับงานแล้ว</span>
+  `;
+
+  logItemsContainer.prepend(itemCard);
+}
 
 function startScanner() {
   const html5QrCode = new Html5Qrcode("reader");
+
   const qrCodeSuccessCallback = async (decodedText, decodedResult) => {
-    // เมื่อสแกนสำเร็จ
     if (!isScanning) return;
 
     console.log(`Code matched = ${decodedText}`, decodedResult);
 
-    // ตรวจสอบว่าในลิงก์มีคำว่า order หรือไม่
     let orderId = "";
     try {
       const url = new URL(decodedText);
       orderId = url.searchParams.get("order");
     } catch (e) {
-      // ถ้าไม่ใช่ URL อาจจะเป็นข้อความปกติ ให้ลองเช็คด้วย regex
       const match = decodedText.match(/[?&]order=([^&]+)/);
       if (match) orderId = match[1];
+      else if (/^\d+$/.test(decodedText.trim())) orderId = decodedText.trim();
     }
 
     if (orderId) {
-      isScanning = false; // หยุดสแกนชั่วคราว
-      const cleanOrderId = orderId.toString().replace(/^0+/, ""); // ตัดเลข 0 ข้างหน้า
+      isScanning = false; // Pause scanner during processing
+      const cleanOrderId = orderId.toString().replace(/^0+/, "");
+      const user = getEmployeeUser();
+      const employeeId = user.id || user.username || "";
+      const employeeFullName = user.last_name
+        ? `${user.username || ''} ${user.last_name || ''}`
+        : user.username || user.nickname || "พนักงานจัดส่ง";
 
-      // แสดง UI สำเร็จแบบไม่มีข้อความ
-      const mainContainer = document.getElementById("main-container");
-      if (mainContainer) mainContainer.classList.add("success-border");
-      
+      // Prevent duplicate scan in current session
+      if (scannedSessionMap.has(cleanOrderId)) {
+        showToast(`⚠️ ใบสั่งงาน #${cleanOrderId.padStart(4, '0')} รับไปแล้วในเซสชันนี้`, 'warning');
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        setTimeout(() => {
+          isScanning = true;
+        }, 1500);
+        return;
+      }
+
+      // Haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+
       const loader = document.getElementById("mini-loader");
       if (loader) loader.style.display = "block";
-      
-      const icon = document.getElementById("header-icon");
-      if (icon) icon.style.color = "var(--success)";
 
       try {
-        // ยิง API เพื่อดึงข้อมูลงาน (get_task_by_id)
+        // 1. Fetch task details from backend
         const response = await jsonp(SCRIPT_URL_ORDER, {
           action: "get_task_by_id",
           data: { orderNo: cleanOrderId }
         });
-        console.log("Fetch task success:", response);
-        
-        if (response && response.result === "success" && response.data) {
-          const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
-          const today = new Date().toISOString().split('T')[0];
-          const taskData = { ...response.data, scan_date: today };
-          storedTasks[cleanOrderId] = taskData; // เก็บข้อมูลลงใน key ที่เป็นเลขที่ใบสั่งงาน
-          localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
-        }
-      } catch (err) {
-        console.error("Auto-fetch failed", err);
-      } finally {
-        // พากลับไปหน้าอัปเดต
-        setTimeout(() => {
-          window.location.href = `/employee/update-status.html?order=${orderId}`;
-        }, 500);
-      }
 
-      // สั่นเบาๆ (ถ้าอุปกรณ์รองรับ)
-      if (navigator.vibrate) {
-        navigator.vibrate(100);
+        const taskData = (response && response.result === "success" && response.data)
+          ? response.data
+          : { orderNo: cleanOrderId, 'ลูกค้า': 'ใบสั่งงาน #' + cleanOrderId, 'โครงการ': '-' };
+
+        // 2. Assign employee ID and name to Google Sheet (Master File)
+        try {
+          await postData(SCRIPT_URL_ORDER, "update", {
+            orderNo: cleanOrderId,
+            id: employeeId,
+            messengerName: employeeFullName
+          });
+          console.log(`Assigned order #${cleanOrderId} to employee ${employeeId}`);
+        } catch (assignErr) {
+          console.warn("Sheet update notification warning:", assignErr);
+        }
+
+        // 3. Save to Local Storage for employee's daily list
+        const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+        const today = new Date().toISOString().split('T')[0];
+        const fullTaskData = {
+          ...taskData,
+          'รหัสพนักงานที่มอบหมาย': employeeId,
+          'ชื่อพนักงาน': employeeFullName,
+          scan_date: today,
+          _source: 'scan'
+        };
+
+        storedTasks[cleanOrderId] = fullTaskData;
+        localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
+
+        // Mark scanned in current session
+        scannedSessionMap.add(cleanOrderId);
+
+        // Update UI
+        showToast(`✅ บันทึกรับงาน #${cleanOrderId.padStart(4, '0')} เรียบร้อย!`, 'success');
+        addLogItem(cleanOrderId, fullTaskData['ลูกค้า'], fullTaskData['โครงการ']);
+        updateBatchCounter();
+
+      } catch (err) {
+        console.error("Scan processing error:", err);
+        showToast(`❌ เกิดข้อผิดพลาดในการดึงข้อมูลใบงาน #${cleanOrderId}`, 'error');
+      } finally {
+        if (loader) loader.style.display = "none";
+        // Auto resume scanner for continuous batch scanning
+        setTimeout(() => {
+          isScanning = true;
+        }, 1200);
       }
     }
   };
@@ -94,7 +198,6 @@ function startScanner() {
     aspectRatio: 1.0,
   };
 
-  // เริ่มเปิดกล้องหลัง
   html5QrCode
     .start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
     .catch((err) => {

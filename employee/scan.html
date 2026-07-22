@@ -38,23 +38,38 @@
           style="width: 24px; height: 24px; color: var(--success)"
         ></i>
       </div>
-      <i
-        data-feather="maximize"
-        id="header-icon"
-        style="
-          width: 32px;
-          height: 32px;
-          color: var(--primary);
-          margin-bottom: 5px;
-        "
-      ></i>
-      <h2>สแกน QR Code</h2>
-      <p class="scan-desc">สแกนรหัสพัสดุเพื่ออัปเดตสถานะ</p>
+
+      <div class="scan-header">
+        <i
+          data-feather="maximize"
+          id="header-icon"
+          style="width: 28px; height: 28px; color: var(--primary);"
+        ></i>
+        <div>
+          <h2>ยิงรับงานประจำวัน (QR Code)</h2>
+          <p class="scan-desc">สแกนใบสั่งงานเพื่อลงทะเบียนรับงานเข้าเครื่อง</p>
+        </div>
+      </div>
+
+      <div class="batch-count-badge" id="batchCountBadge">
+        สแกนรับงานแล้ววันนี้: <strong id="batchCount">0</strong> ใบ
+      </div>
+
+      <div id="toastAlert" class="toast-alert" style="display: none;"></div>
 
       <div id="reader"></div>
 
-      <div id="result-container" class="result-success" style="display: none">
-        <span id="scan-result"></span>
+      <div class="scan-actions">
+        <a href="list.html" class="btn-view-list">
+          <i data-feather="list"></i> ดูรายการงานวันนี้ (<span id="btnTaskCount">0</span>)
+        </a>
+      </div>
+
+      <div id="scannedLog" class="scanned-log">
+        <div class="log-title">📋 รายการที่ยิงรับแล้วในเซสชันนี้</div>
+        <div id="logItems" class="log-items">
+          <div class="empty-log">ยังไม่มีรายการที่ยิงในเซสชันนี้</div>
+        </div>
       </div>
     </div>
 
