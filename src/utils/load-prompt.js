@@ -30,66 +30,88 @@ window.TNPromptFonts = {
   }
 };
 
-export function fixThaiPDFText(str) {
-  if (!str) return str;
-  str = String(str);
-
-  let result = '';
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    const code = str.charCodeAt(i);
-
-    const isTone = code >= 0x0E48 && code <= 0x0E4C; // ่ ้ ๊ ๋ ์
-    const isUpperVowel = (code >= 0x0E34 && code <= 0x0E37) || code === 0x0E31 || code === 0x0E47 || code === 0x0E4D; // ิ ี ึ ื ั ็ ํ
-    const isLowerVowel = code === 0x0E38 || code === 0x0E39 || code === 0x0E3A; // ุ ู ฺ
-
-    const prevChar = i > 0 ? str[i - 1] : '';
-    const prevCode = i > 0 ? str.charCodeAt(i - 1) : 0;
-    const prevPrevChar = i > 1 ? str[i - 2] : '';
-
-    const isTall = (c) => c === 'ป' || c === 'ฝ' || c === 'ฟ' || c === 'ฬ';
-    const isDescender = (c) => c === 'ฎ' || c === 'ฏ';
-
-    if (isTone) {
-      const prevIsUpper = (prevCode >= 0x0E34 && prevCode <= 0x0E37) || prevCode === 0x0E31 || prevCode === 0x0E47 || prevCode === 0x0E4D;
-      const baseChar = prevIsUpper ? prevPrevChar : prevChar;
-
-      if (isTall(baseChar)) {
-        result += String.fromCharCode(0xF713 + (code - 0x0E48));
-      } else if (prevIsUpper) {
-        result += String.fromCharCode(0xF70A + (code - 0x0E48));
-      } else {
-        result += String.fromCharCode(0xF705 + (code - 0x0E48));
-      }
-    } else if (isUpperVowel && isTall(prevChar)) {
-      if (code === 0x0E31) result += String.fromCharCode(0xF710);
-      else if (code === 0x0E34) result += String.fromCharCode(0xF701);
-      else if (code === 0x0E35) result += String.fromCharCode(0xF702);
-      else if (code === 0x0E36) result += String.fromCharCode(0xF703);
-      else if (code === 0x0E37) result += String.fromCharCode(0xF704);
-      else if (code === 0x0E47) result += String.fromCharCode(0xF712);
-      else result += char;
-    } else if (isLowerVowel && isDescender(prevChar)) {
-      result += String.fromCharCode(0xF718 + (code - 0x0E38));
-    } else {
-      result += char;
-    }
-  }
-
-  return result;
-}
-
 export function patchJsPDFThaiText(doc) {
   if (!doc || doc._thaiTextPatched) return;
   doc._thaiTextPatched = true;
 
   const originalText = doc.text.bind(doc);
+
   doc.text = function (text, x, y, options, transform) {
-    if (typeof text === 'string') {
-      text = fixThaiPDFText(text);
-    } else if (Array.isArray(text)) {
-      text = text.map((line) => (typeof line === 'string' ? fixThaiPDFText(line) : line));
+    if (!text) return originalText(text, x, y, options, transform);
+
+    const scale = doc.internal.scaleFactor || 1;
+    const fontSize = doc.internal.getFontSize() || 10;
+    const dy = (fontSize * 0.18) / scale; // vertical shift for Level 3 tone marks above upper vowels
+
+    const isCombining = (code) =>
+      (code >= 0x0E34 && code <= 0x0E37) ||
+      code === 0x0E31 ||
+      code === 0x0E47 ||
+      code === 0x0E4D ||
+      code === 0x0E38 ||
+      code === 0x0E39 ||
+      code === 0x0E3A ||
+      (code >= 0x0E48 && code <= 0x0E4C);
+
+    const renderSingleLine = (lineStr, lineX, lineY) => {
+      if (typeof lineStr !== "string" || !/[\u0E00-\u0E7F]/.test(lineStr)) {
+        return originalText(lineStr, lineX, lineY, options, transform);
+      }
+
+      let startX = lineX;
+      if (options && options.align) {
+        const textWidth = (doc.getStringUnitWidth(lineStr) * fontSize) / scale;
+        if (options.align === "center") {
+          startX = lineX - textWidth / 2;
+        } else if (options.align === "right") {
+          startX = lineX - textWidth;
+        }
+      }
+
+      const clusterOptions = options ? { ...options } : {};
+      delete clusterOptions.align;
+
+      let currentX = startX;
+      const len = lineStr.length;
+
+      for (let i = 0; i < len; i++) {
+        const char = lineStr[i];
+        const code = lineStr.charCodeAt(i);
+
+        const isTone = code >= 0x0E48 && code <= 0x0E4C; // ่ ้ ๊ ๋ ์
+        const prevCode = i > 0 ? lineStr.charCodeAt(i - 1) : 0;
+        const prevIsUpper =
+          (prevCode >= 0x0E34 && prevCode <= 0x0E37) ||
+          prevCode === 0x0E31 ||
+          prevCode === 0x0E47 ||
+          prevCode === 0x0E4D;
+
+        if (isTone && prevIsUpper) {
+          // Tone mark sitting on top of an upper vowel -> shift UP to Level 3
+          originalText(char, currentX, lineY - dy, clusterOptions, transform);
+        } else {
+          originalText(char, currentX, lineY, clusterOptions, transform);
+        }
+
+        if (!isCombining(code)) {
+          const charW = (doc.getStringUnitWidth(char) * fontSize) / scale;
+          currentX += charW;
+        }
+      }
+    };
+
+    if (Array.isArray(text)) {
+      const lineHeightFactor = options && options.lineHeightFactor ? options.lineHeightFactor : 1.15;
+      const lineSpacing = (fontSize * lineHeightFactor) / scale;
+      let currentY = y;
+      text.forEach((line) => {
+        renderSingleLine(line, x, currentY);
+        currentY += lineSpacing;
+      });
+      return doc;
+    } else {
+      renderSingleLine(text, x, y);
+      return doc;
     }
-    return originalText(text, x, y, options, transform);
   };
 }
