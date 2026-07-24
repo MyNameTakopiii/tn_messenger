@@ -148,6 +148,34 @@ function renderTasks(tasks) {
   feather.replace();
 }
 
+function formatDateOnly(val) {
+  if (val === null || val === undefined || val === '') return '-';
+  const str = String(val).trim().replace(/"/g, '');
+  if (!str || str === '-') return '-';
+
+  const dmYMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dmYMatch) {
+    const d = dmYMatch[1].padStart(2, '0');
+    const m = dmYMatch[2].padStart(2, '0');
+    return `${d}/${m}/${dmYMatch[3]}`;
+  }
+
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  }
+
+  const parsedDate = new Date(str);
+  if (!isNaN(parsedDate.getTime())) {
+    const d = String(parsedDate.getDate()).padStart(2, '0');
+    const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const y = parsedDate.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  return str;
+}
+
 window.showDetails = function showDetails(task) {
   if (!modalTitle || !modalBody || !detailModal) return;
   const orderNo = task["เลขที่ใบสั่งงาน"] || task.orderNo || task.id || "-";
@@ -157,9 +185,13 @@ window.showDetails = function showDetails(task) {
   for (const [key, value] of Object.entries(task)) {
     const item = document.createElement("div");
     item.className = "detail-item";
+    let displayVal = value !== null && value !== undefined ? value : "-";
+    if (key === "วันที่เก็บเอกสาร" || (key.includes("วันที่") && key !== "ประทับเวลา")) {
+      displayVal = formatDateOnly(displayVal);
+    }
     item.innerHTML = `
       <span class="detail-label">${key}</span>
-      <span class="detail-value">${value !== null && value !== undefined ? value : "-"}</span>
+      <span class="detail-value">${displayVal}</span>
     `;
     modalBody.appendChild(item);
   }

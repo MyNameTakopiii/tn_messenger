@@ -100,6 +100,34 @@ window.searchOrder = async function searchOrder() {
   }
 };
 
+function formatDateOnly(val) {
+  if (val === null || val === undefined || val === '') return '-';
+  const str = String(val).trim().replace(/"/g, '');
+  if (!str || str === '-') return '-';
+
+  const dmYMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dmYMatch) {
+    const d = dmYMatch[1].padStart(2, '0');
+    const m = dmYMatch[2].padStart(2, '0');
+    return `${d}/${m}/${dmYMatch[3]}`;
+  }
+
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  }
+
+  const parsedDate = new Date(str);
+  if (!isNaN(parsedDate.getTime())) {
+    const d = String(parsedDate.getDate()).padStart(2, '0');
+    const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const y = parsedDate.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  return str;
+}
+
 function displayOrderInfo(row) {
   const clean = text => (text || "").replace(/"/g, "").trim();
 
@@ -111,7 +139,7 @@ function displayOrderInfo(row) {
     'requester': row[4],
     'phone': row[5],
     'project': row[2],
-    'collectDate': row[1],
+    'collectDate': formatDateOnly(row[1]),
     'customer': row[6],
     'addrStreet': row[9],
     'subdistrict': row[10],
@@ -121,7 +149,7 @@ function displayOrderInfo(row) {
 
   for (const [id, value] of Object.entries(mappings)) {
     const el = document.getElementById(id);
-    if (el) el.textContent = clean(value) || '-';
+    if (el) el.textContent = id === 'collectDate' ? value : (clean(value) || '-');
   }
 
   buildTimeline(row);

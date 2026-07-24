@@ -214,10 +214,47 @@ function formatDateForFilter_(rawDate) {
   return rawDate;
 }
 
+function formatDateOnly_(val) {
+  if (val == null || val === '') return '';
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, 'Asia/Bangkok', 'dd/MM/yyyy');
+  }
+  const str = String(val).trim();
+  if (!str) return '';
+
+  const dmYMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dmYMatch) {
+    const d = String(dmYMatch[1]).padStart(2, '0');
+    const m = String(dmYMatch[2]).padStart(2, '0');
+    return `${d}/${m}/${dmYMatch[3]}`;
+  }
+
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  }
+
+  if (str.includes('GMT') || str.includes('Indochina Time') || /^[A-Z][a-z]{2}\s[A-Z][a-z]{2}\s\d{2}\s\d{4}/.test(str)) {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return Utilities.formatDate(d, 'Asia/Bangkok', 'dd/MM/yyyy');
+    }
+  }
+
+  return str;
+}
+
 function rowToObject_(headers, row) {
   const obj = {};
   headers.forEach(function (h, i) {
-    obj[String(h)] = row[i] != null ? String(row[i]) : '';
+    const key = String(h);
+    let val = row[i];
+    if (key === 'วันที่เก็บเอกสาร' || (key.includes('วันที่') && key !== 'ประทับเวลา')) {
+      val = formatDateOnly_(val);
+    } else if (val instanceof Date) {
+      val = formatDateOnly_(val);
+    }
+    obj[key] = val != null ? String(val) : '';
   });
   return obj;
 }
@@ -453,9 +490,12 @@ function getAllRowJson() {
       const obj = {};
       headers.forEach((h, i) => {
         let v = row[i];
-        if ((h === 'ประทับเวลา' || h === 'วันที่เก็บเอกสาร') && v instanceof Date) {
-          const f = h === 'ประทับเวลา' ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy';
-          v = Utilities.formatDate(v, 'Asia/Bangkok', f);
+        if (h === 'ประทับเวลา' && v instanceof Date) {
+          v = Utilities.formatDate(v, 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
+        } else if (h === 'วันที่เก็บเอกสาร' || (h.includes('วันที่') && h !== 'ประทับเวลา')) {
+          v = formatDateOnly_(v);
+        } else if (v instanceof Date) {
+          v = formatDateOnly_(v);
         }
         obj[h] = v !== undefined && v !== null ? String(v) : '';
       });
