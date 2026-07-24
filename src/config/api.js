@@ -14,10 +14,11 @@ export const SHEET_A_ID = import.meta.env.VITE_SHEET_A_ID || "1FkcnGM31UU1UNgsPy
  * JSONP request helper to bypass CORS issues with Google Apps Script GET requests
  * @param {string} url - Base URL
  * @param {object} params - Query parameters
- * @param {number} timeoutMs - Timeout in milliseconds (default 8000ms)
+ * @param {number} timeoutMs - Timeout in milliseconds (default 25000ms)
+ * @param {number} retries - Number of retries on timeout/error (default 1)
  * @returns {Promise<any>}
  */
-export function jsonp(url, params = {}, timeoutMs = 8000) {
+export function jsonp(url, params = {}, timeoutMs = 25000, retries = 1) {
   return new Promise((resolve, reject) => {
     const callbackName = "jsonp_cb_" + Math.random().toString(36).substring(2, 15);
     let timer = null;
@@ -25,7 +26,7 @@ export function jsonp(url, params = {}, timeoutMs = 8000) {
     function cleanup() {
       if (timer) clearTimeout(timer);
       delete window[callbackName];
-      if (script.parentNode) {
+      if (script && script.parentNode) {
         script.parentNode.removeChild(script);
       }
     }
@@ -61,13 +62,23 @@ export function jsonp(url, params = {}, timeoutMs = 8000) {
     
     script.onerror = (err) => {
       cleanup();
-      reject(new Error("JSONP Request failed"));
+      if (retries > 0) {
+        console.warn(`JSONP failed, retrying... (${retries} left)`);
+        jsonp(url, params, timeoutMs, retries - 1).then(resolve).catch(reject);
+      } else {
+        reject(new Error("JSONP Request failed"));
+      }
     };
 
     if (timeoutMs > 0) {
       timer = setTimeout(() => {
         cleanup();
-        reject(new Error("JSONP Request timeout"));
+        if (retries > 0) {
+          console.warn(`JSONP timeout (${timeoutMs}ms), retrying... (${retries} left)`);
+          jsonp(url, params, timeoutMs, retries - 1).then(resolve).catch(reject);
+        } else {
+          reject(new Error("JSONP Request timeout"));
+        }
       }, timeoutMs);
     }
 

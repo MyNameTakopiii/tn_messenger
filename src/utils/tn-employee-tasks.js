@@ -24,7 +24,7 @@ export async function fetchAssignedTasks(date) {
   });
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
 
   try {
     const res = await fetch(`${SCRIPT_URL_ORDER}?${params}`, { signal: controller.signal });

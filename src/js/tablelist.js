@@ -291,9 +291,13 @@ async function loadTableData(options = {}) {
     renderTableRows(pageRows);
     updatePaginationUI();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="20" style="text-align:center; color:red;">❌ โหลดข้อมูลไม่สำเร็จ: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="20" style="text-align:center; padding: 24px; color:#dc2626;">
+      <div style="font-weight: 600; font-size: 15px; margin-bottom: 10px;">❌ โหลดข้อมูลไม่สำเร็จ: ${err.message}</div>
+      <button onclick="window.reloadTableData()" style="padding: 8px 20px; background: #2563eb; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">🔄 ลองใหม่อีกครั้ง</button>
+    </td></tr>`;
   }
 }
+window.reloadTableData = loadTableData;
 
 async function loadJSONData() {
   const cached = readCache();
