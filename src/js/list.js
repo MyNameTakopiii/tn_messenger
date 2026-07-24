@@ -26,16 +26,23 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 let pollNoticeShown = false;
+let isFirstLoad = true;
 
 async function fetchTasks() {
   if (!taskContainer) return;
-  taskContainer.innerHTML = `
-    <div id="loading-state">
-      <i data-feather="loader" class="spin"></i>
-      <p>กำลังโหลดจากระบบ...</p>
-    </div>
-  `;
-  feather.replace();
+  
+  const initialScanned = getScannedTasks();
+  if (isFirstLoad && initialScanned.length === 0) {
+    taskContainer.innerHTML = `
+      <div id="loading-state">
+        <i data-feather="loader" class="spin"></i>
+        <p>กำลังโหลดจากระบบ...</p>
+      </div>
+    `;
+    feather.replace();
+  } else if (isFirstLoad) {
+    renderTasks(initialScanned);
+  }
 
   try {
     const taskList = await loadMergedTasks();
@@ -45,8 +52,9 @@ async function fetchTasks() {
       pollNoticeShown = true;
       console.warn("ใช้ข้อมูลจากเครื่อง (deploy Apps Script เพื่อ sync):", err);
     }
-    const scanned = getScannedTasks();
-    renderTasks(scanned);
+    renderTasks(getScannedTasks());
+  } finally {
+    isFirstLoad = false;
   }
 }
 
@@ -62,6 +70,7 @@ function renderTasks(tasks) {
     const card = document.createElement("div");
     card.className = "task-card";
 
+    const orderNo = task["เลขที่ใบสั่งงาน"] || task.orderNo || task.id || "-";
     const latestStatus = task["ผลการวิ่งงาน 3: สถานะ"] || 
                          task["ผลการวิ่งงาน 2: สถานะ"] || 
                          task["ผลการวิ่งงาน 1: สถานะ"] || 
@@ -85,7 +94,7 @@ function renderTasks(tasks) {
     card.innerHTML = `
       <div class="task-header">
         <span class="order-no">
-          #${task["เลขที่ใบสั่งงาน"]}
+          #${orderNo}
           <span class="${statusClass}">${latestStatus}</span>
           ${sourceBadge}
         </span>
@@ -93,23 +102,23 @@ function renderTasks(tasks) {
       
       <div class="info-row">
         <span class="info-label">โครงการ / ทีม :</span>
-        <span class="info-value">${task["โครงการ"]} / ${task["(ทีม)"]}</span>
+        <span class="info-value">${task["โครงการ"] || "-"} / ${task["(ทีม)"] || "-"}</span>
       </div>
       <div class="info-row">
         <span class="info-label">ชื่อผู้สั่งงาน :</span>
-        <span class="info-value">${task["ผู้สั่งงาน"]}</span>
+        <span class="info-value">${task["ผู้สั่งงาน"] || "-"}</span>
       </div>
       <div class="info-row">
         <span class="info-label">เบอร์ผู้สั่งงาน :</span>
-        <span class="info-value">${task["เบอร์โทรศัพท์"]}</span>
+        <span class="info-value">${task["เบอร์โทรศัพท์"] || "-"}</span>
       </div>
       <div class="info-row">
         <span class="info-label">ชื่อลูกค้า :</span>
-        <span class="info-value">${task["ลูกค้า"]}</span>
+        <span class="info-value">${task["ลูกค้า"] || "-"}</span>
       </div>
       <div class="info-row">
         <span class="info-label">เบอร์ลูกค้า :</span>
-        <span class="info-value">${task["เบอร์โทรศัพท์ลูกค้า"]}</span>
+        <span class="info-value">${task["เบอร์โทรศัพท์ลูกค้า"] || "-"}</span>
       </div>
       <div class="info-row">
         <span class="info-label">สถานที่ติดต่อ :</span>
@@ -120,7 +129,7 @@ function renderTasks(tasks) {
         <button class="btn btn-detail" data-task="${escapedTaskJson}">
           <i data-feather="eye"></i> ดูรายละเอียด
         </button>
-         <a href="/employee/update-status.html?order=${task["เลขที่ใบสั่งงาน"]}" class="btn btn-update">
+         <a href="/employee/update-status.html?order=${orderNo}" class="btn btn-update">
           <i data-feather="edit-3"></i> อัปเดตสถานะ
         </a>
       </div>
@@ -141,7 +150,8 @@ function renderTasks(tasks) {
 
 window.showDetails = function showDetails(task) {
   if (!modalTitle || !modalBody || !detailModal) return;
-  modalTitle.innerText = `รายละเอียดงาน #${task["เลขที่ใบสั่งงาน"]}`;
+  const orderNo = task["เลขที่ใบสั่งงาน"] || task.orderNo || task.id || "-";
+  modalTitle.innerText = `รายละเอียดงาน #${orderNo}`;
   modalBody.innerHTML = "";
 
   for (const [key, value] of Object.entries(task)) {

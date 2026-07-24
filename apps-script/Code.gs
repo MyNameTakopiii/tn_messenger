@@ -482,7 +482,7 @@ function getTaskEmployee(data) {
 }
 
 function getTaskById(data) {
-  const searchOrderNo = String(data.orderNo || '').trim();
+  const searchOrderNo = String(data.orderNo || '').trim().replace(/^0+/, '');
   if (!searchOrderNo) {
     return { result: 'error', message: 'กรุณาระบุเลขที่ใบสั่งงาน' };
   }
@@ -491,7 +491,8 @@ function getTaskById(data) {
   if (allDataResult.result !== 'success') return allDataResult;
 
   const task = allDataResult.data.find(row => {
-    return row['เลขที่ใบสั่งงาน'] === searchOrderNo;
+    const rawVal = String(row['เลขที่ใบสั่งงาน'] || row.orderNo || row.id || '').trim();
+    return rawVal === searchOrderNo || rawVal.replace(/^0+/, '') === searchOrderNo;
   });
 
   if (!task) {

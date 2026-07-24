@@ -135,29 +135,31 @@ function startScanner() {
       if (loader) loader.style.display = "block";
 
       try {
-        // 1. Fetch task details from backend
-        const response = await jsonp(SCRIPT_URL_ORDER, {
-          action: "get_task_by_id",
-          data: { orderNo: cleanOrderId }
-        });
+        let taskData = {
+          'เลขที่ใบสั่งงาน': cleanOrderId,
+          orderNo: cleanOrderId,
+          'ลูกค้า': 'ใบสั่งงาน #' + cleanOrderId,
+          'โครงการ': '-'
+        };
 
-        const taskData = (response && response.result === "success" && response.data)
-          ? response.data
-          : { orderNo: cleanOrderId, 'ลูกค้า': 'ใบสั่งงาน #' + cleanOrderId, 'โครงการ': '-' };
-
-        // 2. Assign employee ID and name to Google Sheet (Master File)
         try {
-          await postData(SCRIPT_URL_ORDER, "update", {
-            orderNo: cleanOrderId,
-            id: employeeId,
-            messengerName: employeeFullName
-          });
-          console.log(`Assigned order #${cleanOrderId} to employee ${employeeId}`);
-        } catch (assignErr) {
-          console.warn("Sheet update notification warning:", assignErr);
+          // 1. Fetch task details from backend (with 4s timeout)
+          const response = await jsonp(SCRIPT_URL_ORDER, {
+            action: "get_task_by_id",
+            data: { orderNo: cleanOrderId }
+          }, 4000);
+
+          if (response && response.result === "success" && response.data) {
+            taskData = { ...taskData, ...response.data };
+          }
+        } catch (fetchErr) {
+          console.warn("Could not fetch detailed task info from server, using local fallback:", fetchErr);
         }
 
-        // 3. Save to Local Storage for employee's daily list
+        // Always ensure 'เลขที่ใบสั่งงาน' exists
+        taskData['เลขที่ใบสั่งงาน'] = taskData['เลขที่ใบสั่งงาน'] || cleanOrderId;
+
+        // 2. Save to Local Storage for employee's daily list IMMEDIATELY
         const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
         const today = new Date().toISOString().split('T')[0];
         const fullTaskData = {
@@ -174,20 +176,29 @@ function startScanner() {
         // Mark scanned in current session
         scannedSessionMap.add(cleanOrderId);
 
-        // Update UI
+        // Update UI immediately
         showToast(`✅ บันทึกรับงาน #${cleanOrderId.padStart(4, '0')} เรียบร้อย!`, 'success');
         addLogItem(cleanOrderId, fullTaskData['ลูกค้า'], fullTaskData['โครงการ']);
         updateBatchCounter();
 
+        // 3. Assign employee ID and name to Google Sheet in background (Non-blocking)
+        postData(SCRIPT_URL_ORDER, "update", {
+          orderNo: cleanOrderId,
+          id: employeeId,
+          messengerName: employeeFullName
+        }).catch(assignErr => {
+          console.warn("Background sheet update notification warning:", assignErr);
+        });
+
       } catch (err) {
         console.error("Scan processing error:", err);
-        showToast(`❌ เกิดข้อผิดพลาดในการดึงข้อมูลใบงาน #${cleanOrderId}`, 'error');
+        showToast(`❌ เกิดข้อผิดพลาดในการสแกนใบงาน #${cleanOrderId}`, 'error');
       } finally {
         if (loader) loader.style.display = "none";
         // Auto resume scanner for continuous batch scanning
         setTimeout(() => {
           isScanning = true;
-        }, 1200);
+        }, 800);
       }
     }
   };

@@ -10,12 +10,29 @@ export const SHEET_A_ID = import.meta.env.VITE_SHEET_A_ID || "1FkcnGM31UU1UNgsPy
  * @param {object} params - Query parameters
  * @returns {Promise<any>}
  */
-export function jsonp(url, params = {}) {
+/**
+ * JSONP request helper to bypass CORS issues with Google Apps Script GET requests
+ * @param {string} url - Base URL
+ * @param {object} params - Query parameters
+ * @param {number} timeoutMs - Timeout in milliseconds (default 8000ms)
+ * @returns {Promise<any>}
+ */
+export function jsonp(url, params = {}, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
     const callbackName = "jsonp_cb_" + Math.random().toString(36).substring(2, 15);
+    let timer = null;
+
+    function cleanup() {
+      if (timer) clearTimeout(timer);
+      delete window[callbackName];
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    }
+
     window[callbackName] = function (response) {
-      resolve(response);
       cleanup();
+      resolve(response);
     };
 
     const script = document.createElement("script");
@@ -43,18 +60,18 @@ export function jsonp(url, params = {}) {
     script.src = `${cleanUrl}?${searchParams.toString()}`;
     
     script.onerror = (err) => {
-      reject(new Error("JSONP Request failed"));
       cleanup();
+      reject(new Error("JSONP Request failed"));
     };
 
-    document.body.appendChild(script);
-
-    function cleanup() {
-      delete window[callbackName];
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
+    if (timeoutMs > 0) {
+      timer = setTimeout(() => {
+        cleanup();
+        reject(new Error("JSONP Request timeout"));
+      }, timeoutMs);
     }
+
+    document.body.appendChild(script);
   });
 }
 
