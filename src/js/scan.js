@@ -8,25 +8,28 @@ import '../utils/pwa-install.js';
 // Protect Route
 const token = localStorage.getItem("tn_employee_token");
 if (!token) {
-  window.location.href = "/employee/login_employee.html";
+  window.location.href = "login_employee.html";
 }
 
 // Initialize feather icons
-feather.replace();
+try { feather.replace(); } catch (_) {}
 
 let isScanning = true;
 let scannedSessionMap = new Set();
 let sessionLogItems = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Hide loading overlay
-  setTimeout(() => {
-    const overlay = document.getElementById("loading-overlay");
-    if (overlay) overlay.style.display = "none";
-    startScanner();
-    updateBatchCounter();
-  }, 500);
-});
+function initScan() {
+  const overlay = document.getElementById("loading-overlay");
+  if (overlay) overlay.style.display = "none";
+  startScanner();
+  updateBatchCounter();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener("DOMContentLoaded", initScan);
+} else {
+  initScan();
+}
 
 function getEmployeeUser() {
   try {

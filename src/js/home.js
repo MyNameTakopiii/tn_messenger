@@ -10,47 +10,45 @@ const token = localStorage.getItem("tn_employee_token");
 const userDataStr = localStorage.getItem("tn_employee_user");
 
 if (!token || !userDataStr) {
-  window.location.href = '/employee/login_employee.html';
+  window.location.href = 'login_employee.html';
 }
 
 const userData = JSON.parse(userDataStr || "{}");
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (userData.id) {
-    const elements = {
-      userId: userData.id || '-',
-      userName: userData.username || '-',
-      userFirstName: userData.username || '-',
-      userLastName: userData.last_name || '-',
-      userEmail: userData.email || '-',
-      userNickname: userData.nickname || '-'
-    };
-    
-    Object.keys(elements).forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = elements[id];
-    });
-    
-    const displayName = document.getElementById('displayName');
-    if (displayName) {
-      displayName.textContent = `ยินดีต้อนรับ คุณ${userData.nickname || userData.username}`;
-    }
-    const avatarText = document.getElementById('avatarText');
-    if (avatarText) {
-      avatarText.textContent = (userData.nickname || userData.username).charAt(0).toUpperCase();
-    }
-  }
-
-  // Attendance UI & Listeners
-  initAttendanceUI();
-  setupAttendanceListeners();
-
-  // Hide loader overlay
+function initHome() {
   const overlay = document.getElementById('loading-overlay');
-  if (overlay) {
-    setTimeout(() => {
-      overlay.style.display = 'none';
-    }, 400);
+  if (overlay) overlay.style.display = 'none';
+
+  try {
+    if (userData.id) {
+      const elements = {
+        userId: userData.id || '-',
+        userName: userData.username || '-',
+        userFirstName: userData.username || '-',
+        userLastName: userData.last_name || '-',
+        userEmail: userData.email || '-',
+        userNickname: userData.nickname || '-'
+      };
+      
+      Object.keys(elements).forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = elements[id];
+      });
+      
+      const displayName = document.getElementById('displayName');
+      if (displayName) {
+        displayName.textContent = `ยินดีต้อนรับ คุณ${userData.nickname || userData.username}`;
+      }
+      const avatarText = document.getElementById('avatarText');
+      if (avatarText) {
+        avatarText.textContent = (userData.nickname || userData.username).charAt(0).toUpperCase();
+      }
+    }
+
+    initAttendanceUI();
+    setupAttendanceListeners();
+  } catch (err) {
+    console.error("Home initialization error:", err);
   }
 
   updateTaskBadge();
@@ -58,7 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') updateTaskBadge();
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHome);
+} else {
+  initHome();
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ATTENDANCE & DAILY SUMMARY LOGIC
