@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   try {
     if (userData && userData.id) {
+      const nameStr = String(userData.nickname || userData.username || 'U');
       const elements = {
         userId: userData.id || '-',
         userName: userData.username || '-',
@@ -44,11 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const displayName = document.getElementById('displayName');
       if (displayName) {
-        displayName.textContent = `ยินดีต้อนรับ คุณ${userData.nickname || userData.username}`;
+        displayName.textContent = `ยินดีต้อนรับ คุณ${nameStr}`;
       }
       const avatarText = document.getElementById('avatarText');
       if (avatarText) {
-        avatarText.textContent = (userData.nickname || userData.username || 'U').charAt(0).toUpperCase();
+        avatarText.textContent = nameStr.charAt(0).toUpperCase();
       }
     }
 
@@ -56,12 +57,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initAttendanceUI();
     setupAttendanceListeners();
     updateTaskBadge();
-
-    try { feather.replace(); } catch (_) {}
   } catch (err) {
     console.error("Error during home page initialization:", err);
   } finally {
     if (overlay) overlay.style.display = 'none';
+    try { feather.replace(); } catch (_) {}
   }
 
   setInterval(updateTaskBadge, 30000);
