@@ -9,18 +9,25 @@ import '../utils/pwa-install.js';
 const token = localStorage.getItem("tn_employee_token");
 const userDataStr = localStorage.getItem("tn_employee_user");
 
-if (!token || !userDataStr) {
-  window.location.href = 'login_employee.html';
+if (!token || !userDataStr || userDataStr === "undefined" || token === "undefined") {
+  window.location.href = '/employee/login_employee.html';
 }
 
-const userData = JSON.parse(userDataStr || "{}");
+let userData = {};
+try {
+  if (userDataStr && userDataStr !== "undefined") {
+    userData = JSON.parse(userDataStr);
+  }
+} catch (e) {
+  console.warn("Could not parse userData JSON:", e);
+}
 
-function initHome() {
+document.addEventListener('DOMContentLoaded', () => {
   const overlay = document.getElementById('loading-overlay');
   if (overlay) overlay.style.display = 'none';
 
   try {
-    if (userData.id) {
+    if (userData && userData.id) {
       const elements = {
         userId: userData.id || '-',
         userName: userData.username || '-',
@@ -41,28 +48,27 @@ function initHome() {
       }
       const avatarText = document.getElementById('avatarText');
       if (avatarText) {
-        avatarText.textContent = (userData.nickname || userData.username).charAt(0).toUpperCase();
+        avatarText.textContent = (userData.nickname || userData.username || 'U').charAt(0).toUpperCase();
       }
     }
 
+    // Attendance UI & Listeners
     initAttendanceUI();
     setupAttendanceListeners();
+    updateTaskBadge();
+
+    try { feather.replace(); } catch (_) {}
   } catch (err) {
-    console.error("Home initialization error:", err);
+    console.error("Error during home page initialization:", err);
+  } finally {
+    if (overlay) overlay.style.display = 'none';
   }
 
-  updateTaskBadge();
   setInterval(updateTaskBadge, 30000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') updateTaskBadge();
   });
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initHome);
-} else {
-  initHome();
-}
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ATTENDANCE & DAILY SUMMARY LOGIC

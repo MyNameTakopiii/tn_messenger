@@ -7,8 +7,10 @@ export function todayISO() {
 
 export function getEmployeeId() {
   try {
-    const user = JSON.parse(localStorage.getItem("tn_employee_user") || "{}");
-    return user.id || "";
+    const raw = localStorage.getItem("tn_employee_user");
+    if (!raw || raw === "undefined") return "";
+    const user = JSON.parse(raw);
+    return user ? (user.id || "") : "";
   } catch (_) {
     return "";
   }
@@ -42,10 +44,18 @@ export async function fetchAssignedTasks(date) {
 
 export function getScannedTasks() {
   const today = todayISO();
-  const stored = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+  let stored = {};
+  try {
+    const raw = localStorage.getItem("tasks_employee");
+    if (raw && raw !== "undefined") {
+      stored = JSON.parse(raw) || {};
+    }
+  } catch (_) {
+    stored = {};
+  }
   let changed = false;
   for (const id in stored) {
-    if (stored[id].scan_date !== today) {
+    if (stored[id] && stored[id].scan_date !== today) {
       delete stored[id];
       changed = true;
     }
