@@ -126,79 +126,82 @@ function startScanner() {
         return;
       }
 
-      // Haptic feedback
+      // Haptic feedback immediately
       if (navigator.vibrate) {
         navigator.vibrate(100);
       }
 
-      const loader = document.getElementById("mini-loader");
-      if (loader) loader.style.display = "block";
-
       try {
+        const today = new Date().toISOString().split('T')[0];
         let taskData = {
           'เลขที่ใบสั่งงาน': cleanOrderId,
           orderNo: cleanOrderId,
-          'ลูกค้า': 'ใบสั่งงาน #' + cleanOrderId,
-          'โครงการ': '-'
-        };
-
-        try {
-          // 1. Fetch task details from backend (with 4s timeout)
-          const response = await jsonp(SCRIPT_URL_ORDER, {
-            action: "get_task_by_id",
-            data: { orderNo: cleanOrderId }
-          }, 4000);
-
-          if (response && response.result === "success" && response.data) {
-            taskData = { ...taskData, ...response.data };
-          }
-        } catch (fetchErr) {
-          console.warn("Could not fetch detailed task info from server, using local fallback:", fetchErr);
-        }
-
-        // Always ensure 'เลขที่ใบสั่งงาน' exists
-        taskData['เลขที่ใบสั่งงาน'] = taskData['เลขที่ใบสั่งงาน'] || cleanOrderId;
-
-        // 2. Save to Local Storage for employee's daily list IMMEDIATELY
-        const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
-        const today = new Date().toISOString().split('T')[0];
-        const fullTaskData = {
-          ...taskData,
+          'ลูกค้า': 'ใบสั่งงาน #' + cleanOrderId.padStart(4, '0'),
+          'โครงการ': '-',
           'รหัสพนักงานที่มอบหมาย': employeeId,
           'ชื่อพนักงาน': employeeFullName,
           scan_date: today,
           _source: 'scan'
         };
 
-        storedTasks[cleanOrderId] = fullTaskData;
+        // 1. Save to Local Storage IMMEDIATELY (Instant Response ~ 10ms)
+        const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+        storedTasks[cleanOrderId] = { ...storedTasks[cleanOrderId], ...taskData };
         localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
 
-        // Mark scanned in current session
+        // Mark scanned in current session & update UI immediately
         scannedSessionMap.add(cleanOrderId);
-
-        // Update UI immediately
         showToast(`✅ บันทึกรับงาน #${cleanOrderId.padStart(4, '0')} เรียบร้อย!`, 'success');
-        addLogItem(cleanOrderId, fullTaskData['ลูกค้า'], fullTaskData['โครงการ']);
+        addLogItem(cleanOrderId, taskData['ลูกค้า'], taskData['โครงการ']);
         updateBatchCounter();
 
-        // 3. Assign employee ID and name to Google Sheet in background (Non-blocking)
-        postData(SCRIPT_URL_ORDER, "update", {
-          orderNo: cleanOrderId,
-          id: employeeId,
-          messengerName: employeeFullName
-        }).catch(assignErr => {
-          console.warn("Background sheet update notification warning:", assignErr);
-        });
+        // 2. Fetch detailed info and update Google Sheet in BACKGROUND (Non-blocking)
+        (async () => {
+          try {
+            const response = await jsonp(SCRIPT_URL_ORDER, {
+              action: "get_task_by_id",
+              data: { orderNo: cleanOrderId }
+            }, 6000);
+
+            if (response && response.result === "success" && response.data) {
+              const updatedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+              updatedTasks[cleanOrderId] = { ...updatedTasks[cleanOrderId], ...response.data };
+              localStorage.setItem("tasks_employee", JSON.stringify(updatedTasks));
+
+              // Update log display with fetched customer name if available
+              const logCards = document.querySelectorAll(".log-item-card");
+              logCards.forEach(card => {
+                const orderSpan = card.querySelector(".log-item-order");
+                if (orderSpan && orderSpan.textContent.includes(`#${cleanOrderId.padStart(4, '0')}`)) {
+                  const custSpan = card.querySelector(".log-item-customer");
+                  if (custSpan && response.data['ลูกค้า']) {
+                    custSpan.textContent = ` - ${response.data['ลูกค้า']} (${response.data['โครงการ'] || '-'})`;
+                  }
+                }
+              });
+            }
+          } catch (bgErr) {
+            console.warn("Background fetch task details info:", bgErr);
+          }
+
+          // Update Google Sheet assignment in background
+          postData(SCRIPT_URL_ORDER, "update", {
+            orderNo: cleanOrderId,
+            id: employeeId,
+            messengerName: employeeFullName
+          }).catch(assignErr => {
+            console.warn("Background sheet update notification info:", assignErr);
+          });
+        })();
 
       } catch (err) {
         console.error("Scan processing error:", err);
         showToast(`❌ เกิดข้อผิดพลาดในการสแกนใบงาน #${cleanOrderId}`, 'error');
       } finally {
-        if (loader) loader.style.display = "none";
-        // Auto resume scanner for continuous batch scanning
+        // Instant resume scanner for continuous batch scanning (200ms)
         setTimeout(() => {
           isScanning = true;
-        }, 800);
+        }, 200);
       }
     }
   };

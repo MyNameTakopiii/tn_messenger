@@ -101,6 +101,9 @@ function handleRequest(e) {
       case 'insert_news':
         result = insertNews(parseJsonParam(e, 'data'));
         break;
+      case 'log_attendance':
+        result = logAttendance(parseJsonParam(e, 'data'));
+        break;
 
       default:
         // Default fallthrough to support direct JSONP inserts from legacy clients
@@ -1251,4 +1254,35 @@ function testLineConfig() {
   }
 
   return report;
+}
+
+function logAttendance(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('ลงเวลาพนักงาน');
+  if (!sheet) {
+    sheet = ss.insertSheet('ลงเวลาพนักงาน');
+    sheet.appendRow([
+      'ประทับเวลา', 'วันที่', 'รหัสพนักงาน', 'ชื่อพนักงาน', 'ประเภท',
+      'เวลาเข้างาน', 'เวลาออกงาน', 'รวมเวลาปฏิบัติงาน',
+      'ใบงานทั้งหมด', 'ส่งสำเร็จ', 'รอดำเนินการ', 'ยกเลิก'
+    ]);
+  }
+
+  const now = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
+  sheet.appendRow([
+    now,
+    data.date || '',
+    data.employeeId || '',
+    data.employeeName || '',
+    data.type || '',
+    data.clockInTime || '',
+    data.clockOutTime || '',
+    data.totalHours || '',
+    data.totalJobs || 0,
+    data.successJobs || 0,
+    data.pendingJobs || 0,
+    data.cancelJobs || 0
+  ]);
+
+  return { result: 'success', message: 'บันทึกเวลาปฏิบัติงานเรียบร้อย' };
 }

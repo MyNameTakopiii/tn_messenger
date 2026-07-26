@@ -3,6 +3,8 @@ import flatpickr from 'flatpickr';
 import { Thai } from 'flatpickr/dist/l10n/th.js';
 import 'flatpickr/dist/flatpickr.min.css';
 import QRCode from 'qrcode';
+import feather from 'feather-icons';
+import { Html5Qrcode } from 'html5-qrcode';
 import {
   postData,
   jsonp,
@@ -37,7 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Setup UI event listeners
   setupAddressListeners();
   setupProjectToggle();
+  setupAssignListeners();
+  checkPageMode();
 });
+
+window.addEventListener("hashchange", checkPageMode);
 
 // 1) Load Thailand Address Data
 async function loadThailandData() {
@@ -241,7 +247,6 @@ function attachDocumentClickListener() {
 
 // 4) Load Employee List
 async function loadEmployeeList() {
-  if (!employeeSelect) return;
   try {
     let json;
     try {
@@ -254,19 +259,35 @@ async function loadEmployeeList() {
       console.warn("⚠️ ไม่พบข้อมูลพนักงาน หรือ Apps Script บน Google Sheets ยังไม่ได้อัปเดต Deploy โค้ดใหม่จาก apps-script/Code.gs");
       return;
     }
-    
-    // Clear dynamic options (keeping the placeholder)
-    employeeSelect.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
-    
-    json.data.forEach((emp) => {
-      const opt = document.createElement("option");
-      opt.value = emp.id;
-      const label = emp.nickname
-        ? `${emp.name} (${emp.nickname}) — ${emp.id}`
-        : `${emp.name} — ${emp.id}`;
-      opt.textContent = label;
-      employeeSelect.appendChild(opt);
-    });
+
+    employeeDataList = json.data;
+
+    if (employeeSelect) {
+      employeeSelect.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+      json.data.forEach((emp) => {
+        const opt = document.createElement("option");
+        opt.value = emp.id;
+        const label = emp.nickname
+          ? `${emp.name} (${emp.nickname}) — ${emp.id}`
+          : `${emp.name} — ${emp.id}`;
+        opt.textContent = label;
+        employeeSelect.appendChild(opt);
+      });
+    }
+
+    const assignSelect = document.getElementById("assignEmployeeSelect");
+    if (assignSelect) {
+      assignSelect.innerHTML = '<option value="">-- เลือกพนักงาน --</option>';
+      json.data.forEach((emp) => {
+        const opt = document.createElement("option");
+        opt.value = emp.id;
+        const label = emp.nickname
+          ? `${emp.name} (${emp.nickname}) — ${emp.id}`
+          : `${emp.name} — ${emp.id}`;
+        opt.textContent = label;
+        assignSelect.appendChild(opt);
+      });
+    }
   } catch (err) {
     console.error("โหลดรายชื่อพนักงานไม่สำเร็จ:", err);
   }
@@ -489,17 +510,278 @@ if (form) {
   });
 }
 
-// Focus highlight highlight assignedEmployeeId on hash load
-window.addEventListener("load", () => {
-  if (window.location.hash === "#assignedEmployeeId" && employeeSelect) {
-    setTimeout(() => {
-      employeeSelect.scrollIntoView({ behavior: "smooth", block: "center" });
-      employeeSelect.focus();
-      employeeSelect.style.transition = "outline 0.3s ease";
-      employeeSelect.style.outline = "4px solid #3b82f6";
-      setTimeout(() => {
-        employeeSelect.style.outline = "";
-      }, 2000);
-    }, 500);
+// ─────────────────────────────────────────────────────────────────────────────
+// ASSIGN MODE LOGIC (#assignedEmployeeId)
+// ─────────────────────────────────────────────────────────────────────────────
+
+let employeeDataList = [];
+let selectedEmployee = null;
+let assignScanner = null;
+let isAssignScanning = true;
+let assignedSessionSet = new Set();
+
+function checkPageMode() {
+  const isAssignMode = window.location.hash === "#assignedEmployeeId";
+  const mainHeader = document.querySelector(".container > h1");
+  const subHeader = document.querySelectorAll(".container > h1")[1];
+  const jobForm = document.getElementById("jobForm");
+  const assignMode = document.getElementById("assignMode");
+
+  if (isAssignMode) {
+    if (jobForm) jobForm.style.display = "none";
+    if (mainHeader) mainHeader.textContent = "ระบบมอบหมายงานพนักงาน";
+    if (subHeader) subHeader.style.display = "none";
+    if (assignMode) {
+      assignMode.style.display = "block";
+      startAssignScanner();
+    }
+  } else {
+    if (jobForm) jobForm.style.display = "block";
+    if (mainHeader) mainHeader.textContent = "ฟอร์มออกใบสั่งงาน";
+    if (subHeader) subHeader.style.display = "block";
+    if (assignMode) assignMode.style.display = "none";
   }
-});
+
+  try {
+    feather.replace();
+  } catch (_) {}
+}
+
+function setupAssignListeners() {
+  const assignSelect = document.getElementById("assignEmployeeSelect");
+  const codeInput = document.getElementById("assignEmployeeCodeInput");
+  const btnSearch = document.getElementById("btnSearchEmployee");
+  const btnManual = document.getElementById("btnAssignManual");
+  const manualInput = document.getElementById("assignManualOrderNo");
+  const btnToggleCamera = document.getElementById("btnToggleAssignCamera");
+
+  if (btnToggleCamera) {
+    btnToggleCamera.addEventListener("click", () => {
+      startAssignScanner();
+    });
+  }
+
+  if (assignSelect) {
+    assignSelect.addEventListener("change", (e) => {
+      const empId = e.target.value;
+      const emp = employeeDataList.find((x) => String(x.id) === String(empId));
+      selectEmployeeForAssign(emp);
+      if (codeInput && emp) codeInput.value = emp.id;
+    });
+  }
+
+  const handleSearch = () => {
+    const query = (codeInput ? codeInput.value : "").trim();
+    if (!query) {
+      showAssignToast("⚠️ กรุณากรอกรหัสพนักงานหรือชื่อพนักงานเพื่อค้นหา", "warning");
+      return;
+    }
+    const qLower = query.toLowerCase();
+    const emp = employeeDataList.find((x) =>
+      String(x.id).toLowerCase() === qLower ||
+      String(x.id).toLowerCase().includes(qLower) ||
+      (x.name && x.name.toLowerCase().includes(qLower)) ||
+      (x.nickname && x.nickname.toLowerCase().includes(qLower))
+    );
+
+    if (emp) {
+      if (assignSelect) assignSelect.value = emp.id;
+      selectEmployeeForAssign(emp);
+      showAssignToast(`✅ เลือกรหัสพนักงาน ${emp.id}: ${emp.name} เรียบร้อย`, "success");
+    } else {
+      const manualEmp = { id: query.toUpperCase(), name: `พนักงานรหัส ${query.toUpperCase()}` };
+      selectEmployeeForAssign(manualEmp);
+      showAssignToast(`✅ กำหนดรหัสพนักงาน ${query.toUpperCase()} สำหรับมอบหมายงาน`, "success");
+    }
+  };
+
+  if (btnSearch) btnSearch.addEventListener("click", handleSearch);
+  if (codeInput) {
+    codeInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSearch();
+      }
+    });
+  }
+
+  const handleManualAssign = () => {
+    const val = (manualInput ? manualInput.value : "").trim();
+    if (!val) {
+      showAssignToast("⚠️ กรุณากรอกเลขที่ใบสั่งงาน", "warning");
+      return;
+    }
+    handleAssignWorkOrder(val);
+  };
+
+  if (btnManual) btnManual.addEventListener("click", handleManualAssign);
+  if (manualInput) {
+    manualInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleManualAssign();
+      }
+    });
+  }
+}
+
+function selectEmployeeForAssign(emp) {
+  selectedEmployee = emp || null;
+  const card = document.getElementById("selectedEmployeeCard");
+  const nameEl = document.getElementById("selectedEmpName");
+  const idEl = document.getElementById("selectedEmpId");
+
+  if (card && nameEl && idEl) {
+    if (emp) {
+      nameEl.textContent = emp.nickname ? `${emp.name} (${emp.nickname})` : emp.name;
+      idEl.textContent = `รหัสพนักงาน: ${emp.id}`;
+      card.style.display = "flex";
+    } else {
+      card.style.display = "none";
+    }
+  }
+}
+
+function showAssignToast(message, type = "success") {
+  const toast = document.getElementById("assignToastAlert");
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.className = `toast-alert ${type}`;
+  toast.style.display = "block";
+
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 3500);
+}
+
+function startAssignScanner() {
+  const readerEl = document.getElementById("assignReader");
+  if (!readerEl) return;
+
+  if (assignScanner) {
+    try {
+      assignScanner.stop().then(() => {
+        assignScanner = null;
+        readerEl.innerHTML = `
+          <div style="padding: 30px; color: #94a3b8; font-weight: 500;">
+            📷 ปิดกล้องเรียบร้อยแล้ว<br>
+            <span style="font-size: 12px; color: #64748b;">กดปุ่มด้านล่างหากต้องการเปิดกล้องสแกนอีกครั้ง</span>
+          </div>
+        `;
+      }).catch(() => {
+        assignScanner = null;
+      });
+    } catch (_) {
+      assignScanner = null;
+    }
+    return;
+  }
+
+  readerEl.innerHTML = `<div style="padding: 30px; color: #60a5fa; font-weight: 500;">⏳ กำลังเชื่อมต่อกล้องสแกน...</div>`;
+  assignScanner = new Html5Qrcode("assignReader");
+  const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+
+  assignScanner.start(
+    { facingMode: "environment" },
+    config,
+    async (decodedText) => {
+      if (!isAssignScanning) return;
+
+      let orderId = "";
+      try {
+        const url = new URL(decodedText);
+        orderId = url.searchParams.get("order");
+      } catch (_) {
+        const match = decodedText.match(/[?&]order=([^&]+)/);
+        if (match) orderId = match[1];
+        else if (/^\d+$/.test(decodedText.trim())) orderId = decodedText.trim();
+      }
+
+      if (orderId) {
+        isAssignScanning = false;
+        await handleAssignWorkOrder(orderId);
+        setTimeout(() => { isAssignScanning = true; }, 1200);
+      }
+    }
+  ).catch((err) => {
+    console.warn("Assign mode scanner info:", err);
+    assignScanner = null;
+    readerEl.innerHTML = `
+      <div style="padding: 24px; color: #f87171; text-align: center;">
+        <p style="font-size: 15px; font-weight: 700; margin-bottom: 4px;">⚠️ ไม่สามารถเปิดกล้องสแกนได้</p>
+        <p style="font-size: 12px; color: #cbd5e1;">กรุณาอนุญาตการใช้งานกล้องในเบราว์เซอร์ หรือใช้ช่องกรอกเลขที่ใบสั่งงานด้านล่างแทน</p>
+      </div>
+    `;
+  });
+}
+
+async function handleAssignWorkOrder(rawOrderNo) {
+  if (!selectedEmployee) {
+    showAssignToast("⚠️ กรุณาเลือกพนักงานหรือกดรหัสพนักงานก่อนมอบหมายงาน", "warning");
+    return;
+  }
+
+  const cleanOrderId = String(rawOrderNo).trim().replace(/^0+/, "");
+  if (!cleanOrderId) {
+    showAssignToast("❌ เลขที่ใบสั่งงานไม่ถูกต้อง", "error");
+    return;
+  }
+
+  const paddedOrder = `#${cleanOrderId.padStart(4, "0")}`;
+
+  if (assignedSessionSet.has(cleanOrderId)) {
+    showAssignToast(`⚠️ ใบสั่งงาน ${paddedOrder} มอบหมายแล้วในเซสชันนี้`, "warning");
+    if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+    return;
+  }
+
+  if (navigator.vibrate) navigator.vibrate(100);
+
+  const empName = selectedEmployee.nickname
+    ? `${selectedEmployee.name} (${selectedEmployee.nickname})`
+    : selectedEmployee.name;
+
+  try {
+    postData(SCRIPT_URL_ORDER, "update", {
+      orderNo: cleanOrderId,
+      id: selectedEmployee.id,
+      messengerName: empName
+    }).catch((err) => {
+      console.warn("Sheet update warning:", err);
+    });
+
+    assignedSessionSet.add(cleanOrderId);
+    showAssignToast(`✅ มอบหมายใบสั่งงาน ${paddedOrder} ให้ ${empName} เรียบร้อย!`, "success");
+    addAssignLogItem(cleanOrderId, empName, selectedEmployee.id);
+
+    const manualInput = document.getElementById("assignManualOrderNo");
+    if (manualInput) manualInput.value = "";
+
+  } catch (err) {
+    console.error("เกิดข้อผิดพลาดในการมอบหมายงาน:", err);
+    showAssignToast(`❌ ไม่สามารถมอบหมายงาน ${paddedOrder} ได้`, "error");
+  }
+}
+
+function addAssignLogItem(orderNo, empName, empId) {
+  const logContainer = document.getElementById("assignLogItems");
+  if (!logContainer) return;
+
+  const emptyLog = logContainer.querySelector(".empty-log");
+  if (emptyLog) emptyLog.remove();
+
+  const paddedOrder = `#${String(orderNo).padStart(4, "0")}`;
+  const time = new Date().toLocaleTimeString("th-TH");
+
+  const item = document.createElement("div");
+  item.className = "log-item-card";
+  item.innerHTML = `
+    <div>
+      <span style="font-weight:700; color:var(--primary);">${paddedOrder}</span>
+      <span style="color:#475569; font-size:12px;"> → ${empName} (${empId})</span>
+    </div>
+    <span style="font-size:11px; color:#10b981; font-weight:600;">✅ ${time}</span>
+  `;
+  logContainer.prepend(item);
+}

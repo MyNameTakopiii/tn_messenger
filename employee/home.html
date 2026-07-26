@@ -45,6 +45,31 @@
     <h2 id="displayName">ยินดีต้อนรับ</h2>
     <p class="welcome-text">ข้อมูลพนักงานของคุณในระบบ</p>
 
+    <!-- Attendance Card: ลงเวลาเข้า-ออกงาน -->
+    <div class="attendance-card">
+      <div class="attendance-header">
+        <div class="attendance-title">
+          <i data-feather="clock" style="width:20px; height:20px; color:var(--primary);"></i>
+          <span>ลงเวลาปฏิบัติงานประจำวัน</span>
+        </div>
+        <div class="attendance-date" id="attendanceDate">-</div>
+      </div>
+
+      <div class="attendance-status-box" id="attendanceStatusBox">
+        <div class="status-indicator" id="statusIndicator">🔴 ยังไม่ได้ลงเวลาเข้างาน</div>
+        <div class="time-display" id="clockTimeDisplay">--:-- น.</div>
+      </div>
+
+      <div class="attendance-actions">
+        <button type="button" id="btnClockIn" class="btn-clock-in">
+          <i data-feather="log-in"></i> ลงเวลาเข้างาน
+        </button>
+        <button type="button" id="btnClockOut" class="btn-clock-out" style="display: none;">
+          <i data-feather="log-out"></i> ลงเวลาออกงาน & สรุปผล
+        </button>
+      </div>
+    </div>
+
     <div class="info-card">
       <div class="info-item">
         <span class="info-label">ID พนักงาน:</span>
@@ -69,6 +94,62 @@
       <div class="info-item">
         <span class="info-label">อีเมล:</span>
         <span class="info-value" id="userEmail">-</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal สรุปผลการวิ่งงานประจำวัน -->
+  <div id="summaryModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📋 สรุปผลการวิ่งงานประจำวัน</h3>
+        <button type="button" class="btn-close-modal" id="btnCloseSummaryModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="summary-employee-info">
+          <div><strong id="sumEmpName">-</strong> (ID: <span id="sumEmpId">-</span>)</div>
+          <div class="summary-date" id="sumDateText">-</div>
+        </div>
+
+        <div class="work-duration-box">
+          <div class="duration-item">
+            <span class="d-label">เวลาเข้างาน:</span>
+            <span class="d-val" id="sumClockInTime">--:--</span>
+          </div>
+          <div class="duration-item">
+            <span class="d-label">เวลาออกงาน:</span>
+            <span class="d-val" id="sumClockOutTime">--:--</span>
+          </div>
+          <div class="duration-item">
+            <span class="d-label">รวมเวลาปฏิบัติงาน:</span>
+            <span class="d-val highlight" id="sumTotalHours">-- ชม. -- นาที</span>
+          </div>
+        </div>
+
+        <h4 style="font-size: 14px; margin: 16px 0 10px; color: var(--primary);">📊 ยอดรวมผลการวิ่งงานวันนี้</h4>
+        <div class="stats-grid">
+          <div class="stat-card total">
+            <div class="stat-num" id="statTotalJobs">0</div>
+            <div class="stat-label">ใบงานทั้งหมด</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-num" id="statSuccessJobs">0</div>
+            <div class="stat-label">ส่งสำเร็จแล้ว</div>
+          </div>
+          <div class="stat-card pending">
+            <div class="stat-num" id="statPendingJobs">0</div>
+            <div class="stat-label">รอดำเนินการ</div>
+          </div>
+          <div class="stat-card cancel">
+            <div class="stat-num" id="statCancelJobs">0</div>
+            <div class="stat-label">ยกเลิก/ล้มเหลว</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnConfirmClockOut" class="btn-confirm-clockout">
+          ✅ ยืนยันลงเวลาออกงาน
+        </button>
       </div>
     </div>
   </div>

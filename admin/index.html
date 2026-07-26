@@ -109,6 +109,82 @@
           <button type="submit">บันทึก</button>
         </div>
       </form>
+
+      <!-- โหมดมอบหมายงานพนักงาน (แสดงเมื่อเข้าผ่าน #assignedEmployeeId) -->
+      <div id="assignMode" style="display: none;">
+        <div class="assign-card">
+          <div class="assign-header">
+            <div>
+              <h2 style="color: var(--primary); font-size: 20px; font-weight: 700; margin-bottom: 4px;">👤 มอบหมายงานพนักงาน</h2>
+              <p class="assign-desc">เลือกพนักงานหรือกดรหัสพนักงาน แล้วสแกนใบสั่งงานเพื่อลงทะเบียนมอบหมายงาน</p>
+            </div>
+          </div>
+
+          <!-- 1. เลือกพนักงาน หรือ กดรหัส -->
+          <div class="assign-section">
+            <h3 class="section-title">1. เลือกพนักงานหรือกดรหัสพนักงาน</h3>
+            
+            <div class="employee-selection-box">
+              <label for="assignEmployeeSelect">เลือกลิสต์พนักงาน:</label>
+              <select id="assignEmployeeSelect">
+                <option value="">-- เลือกพนักงาน --</option>
+              </select>
+
+              <label for="assignEmployeeCodeInput" style="margin-top: 14px;">หรือกด/พิมพ์รหัสพนักงาน (Code / ID):</label>
+              <div class="input-with-button">
+                <input type="text" id="assignEmployeeCodeInput" placeholder="กรอกรหัสพนักงาน เช่น EMP001 หรือพิมพ์ชื่อ..." />
+                <button type="button" id="btnSearchEmployee" style="width: auto; padding: 10px 18px; white-space: nowrap;">ค้นหา</button>
+              </div>
+
+              <div id="selectedEmployeeCard" class="selected-emp-card" style="display: none;">
+                <div class="emp-avatar">👤</div>
+                <div class="emp-info">
+                  <div class="emp-name" id="selectedEmpName">-</div>
+                  <div class="emp-id" id="selectedEmpId">รหัส: -</div>
+                </div>
+                <span class="status-badge success">พร้อมรับมอบหมาย</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. สแกนใบหน้างาน / ใบสั่งงาน -->
+          <div class="assign-section" style="margin-top: 24px;">
+            <h3 class="section-title">2. สแกนใบหน้างาน / ใบสั่งงาน</h3>
+            
+            <div id="assignToastAlert" class="toast-alert" style="display: none;"></div>
+
+            <div id="assignScannerContainer" class="scanner-container-box">
+              <div id="assignReader">
+                <div style="padding: 30px; color: #94a3b8; font-weight: 500;">
+                  📷 กล้องสแกน QR Code ใบสั่งงาน<br>
+                  <span style="font-size: 12px; color: #64748b;">กดปุ่มด้านล่างเพื่อเปิดกล้องสแกน</span>
+                </div>
+              </div>
+              <div id="assignScannerControls" style="margin-top: 12px; text-align: center;">
+                <button type="button" id="btnToggleAssignCamera" class="btn-camera-toggle">
+                  📷 เปิด / ปิดกล้องสแกน QR Code
+                </button>
+              </div>
+            </div>
+
+            <div class="manual-assign-box" style="margin-top: 16px;">
+              <label for="assignManualOrderNo">หรือกรอกเลขที่ใบสั่งงาน (Order No.):</label>
+              <div class="input-with-button">
+                <input type="text" id="assignManualOrderNo" placeholder="เช่น 0001 หรือ 25" />
+                <button type="button" id="btnAssignManual" style="width: auto; padding: 10px 18px; white-space: nowrap;">บันทึกมอบหมายงาน</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. รายการที่มอบหมายแล้วในเซสชันนี้ -->
+          <div class="scanned-log" style="margin-top: 24px;">
+            <div class="log-title">📋 รายการใบสั่งงานที่มอบหมายสำเร็จแล้วในเซสชันนี้</div>
+            <div id="assignLogItems" class="log-items">
+              <div class="empty-log">ยังไม่มีรายการมอบหมายในเซสชันนี้</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>

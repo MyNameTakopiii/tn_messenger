@@ -12,7 +12,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 let _fontsLoaded = false;
 let useServerPagination = true;
 let currentPage = 0;
-let pageSize = 50;
+let pageSize = 10;
 let totalRows = 0;
 let tableHeaders = [];
 let selectedDateFilter = null;
@@ -80,12 +80,14 @@ function formatToThaiDateOnly(dateString) {
   return `${day}/${month}/${yearBE}`;
 }
 
+const LOCAL_BACKUP_KEY = "tn_table_local_backup";
+
 function readCache() {
   try {
-    const raw = sessionStorage.getItem(CACHE_KEY);
+    const raw = sessionStorage.getItem(CACHE_KEY) || localStorage.getItem(LOCAL_BACKUP_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+    if (Date.now() - parsed.ts > CACHE_TTL_MS && !parsed.isBackup) return null;
     return parsed;
   } catch (_) {
     return null;
@@ -94,10 +96,9 @@ function readCache() {
 
 function writeCache(payload) {
   try {
-    sessionStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({ ...payload, ts: Date.now() })
-    );
+    const dataWithTs = JSON.stringify({ ...payload, ts: Date.now(), isBackup: true });
+    sessionStorage.setItem(CACHE_KEY, dataWithTs);
+    localStorage.setItem(LOCAL_BACKUP_KEY, dataWithTs);
   } catch (_) {}
 }
 
@@ -636,9 +637,14 @@ async function generateOrderPDF(row) {
 }
 
 async function getAllFilteredRowsForExport() {
-  if (!useServerPagination) {
-    return filteredRows.length ? filteredRows : allRows;
+  if (filteredRows.length > 0) return filteredRows;
+  if (allRows.length > 0) return allRows;
+
+  const cached = readCache();
+  if (cached && cached.allRows && cached.allRows.length > 0) {
+    return cached.allRows;
   }
+
   const searchInput = document.getElementById("searchInput");
   const search = searchInput ? searchInput.value.trim() : "";
   
@@ -652,8 +658,10 @@ async function getAllFilteredRowsForExport() {
   return jsonp(SCRIPT_URL_ORDER, {
     action: "get_rows_paginated",
     data: queryData
-  }).then(json => {
-    if (json.result === "success") return json.data || [];
+  }, 8000).then(json => {
+    if (json.result === "success" && Array.isArray(json.data) && json.data.length > 0) {
+      return json.data;
+    }
     return filteredRows;
   });
 }
@@ -663,23 +671,23 @@ window.downloadAllPDF = async function downloadAllPDF() {
   if (!btn) return;
 
   btn.disabled = true;
-  btn.textContent = "⏳ กำลังเตรียมข้อมูล...";
+  btn.textContent = "⏳ กำลังดึงข้อมูลจาก Local Backup...";
 
-  let rowsToDownload;
+  let rowsToDownload = [];
   try {
     rowsToDownload = await getAllFilteredRowsForExport();
   } catch (_) {
     rowsToDownload = filteredRows.length > 0 ? filteredRows : allRows;
   }
 
-  if (rowsToDownload.length === 0) {
+  if (!rowsToDownload || rowsToDownload.length === 0) {
     alert("❌ ไม่มีข้อมูลให้ดาวน์โหลด");
     btn.disabled = false;
     btn.textContent = "📥 ดาวน์โหลดทั้งหมด (PDF)";
     return;
   }
 
-  btn.textContent = `⏳ กำลังสร้าง PDF... (${rowsToDownload.length} รายการ)`;
+  btn.textContent = `⚡ กำลังสร้าง PDF ขนาน... (${rowsToDownload.length} รายการ)`;
 
   try {
     const clean = (text) => (text || "").replace(/"/g, "").trim();
@@ -691,13 +699,14 @@ window.downloadAllPDF = async function downloadAllPDF() {
 
     await loadThaiFont(doc);
 
-    const qrDataURLs = [];
-    for (const row of rowsToDownload) {
-      const orderNo = clean(row["เลขที่ใบสั่งงาน"]);
-      const updateURL = `${window.location.origin}/employee/update-status.html?order=${orderNo}`;
-      const qrDataURL = await generateQRCodeImage(updateURL);
-      qrDataURLs.push(qrDataURL);
-    }
+    // Parallel QR Code Generation (Fast Response ~ 0.2s)
+    const qrDataURLs = await Promise.all(
+      rowsToDownload.map(row => {
+        const orderNo = clean(row["เลขที่ใบสั่งงาน"]);
+        const updateURL = `${window.location.origin}/employee/update-status.html?order=${orderNo}`;
+        return generateQRCodeImage(updateURL);
+      })
+    );
 
     rowsToDownload.forEach((row, index) => {
       if (index > 0) doc.addPage();
@@ -721,7 +730,7 @@ window.downloadAllPDF = async function downloadAllPDF() {
         addrStreet: clean(row["ที่อยู่รับเอกสาร เลขที่ ถนน"]),
         subdistrict: clean(row["แขวง/ตำบล"]),
         district: clean(row["เขต/อำเภอ"]),
-        province: clean(row["จังหวัด/รหัสไปรษณีย์"]).split("/")[0].trim(),
+        province: clean(row["จังหวัด/รหัสไปรษณีย์"]).split("/")[0] ? clean(row["จังหวัด/รหัสไปรษณีย์"]).split("/")[0].trim() : "",
         zipcode: clean(row["จังหวัด/รหัสไปรษณีย์"]).split("/")[1]
           ? clean(row["จังหวัด/รหัสไปรษณีย์"]).split("/")[1].trim()
           : "",
