@@ -684,8 +684,27 @@ function startAssignScanner() {
   }
 
   readerEl.innerHTML = `<div style="padding: 30px; color: #60a5fa; font-weight: 500;">⏳ กำลังเชื่อมต่อกล้องสแกน...</div>`;
-  assignScanner = new Html5Qrcode("assignReader");
-  const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+  assignScanner = new Html5Qrcode("assignReader", {
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true
+    }
+  });
+
+  const config = {
+    fps: 20, // Faster scan detection
+    qrbox: (viewfinderWidth, viewfinderHeight) => {
+      const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+      const boxSize = Math.max(220, Math.floor(minEdge * 0.8));
+      return { width: boxSize, height: Math.floor(boxSize * 0.75) };
+    },
+    aspectRatio: 1.0,
+    videoConstraints: {
+      facingMode: "environment",
+      focusMode: "continuous",
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    }
+  };
 
   assignScanner.start(
     { facingMode: "environment" },

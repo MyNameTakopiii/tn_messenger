@@ -59,6 +59,17 @@
 
       <div id="reader"></div>
 
+      <!-- ช่องกรอก/กดเลขที่ใบสั่งงานด้วยตนเอง -->
+      <div class="manual-scan-box">
+        <label for="manualOrderNo">✍️ หรือกด/กรอกเลขที่ใบสั่งงาน (Order No.):</label>
+        <div class="input-with-button">
+          <input type="text" id="manualOrderNo" placeholder="เช่น 0001 หรือ 25" inputmode="numeric" />
+          <button type="button" id="btnManualScan" class="btn-manual-scan">
+            <i data-feather="check-circle"></i> บันทึกรับงาน
+          </button>
+        </div>
+      </div>
+
       <div class="scan-actions">
         <a href="list.html" class="btn-view-list">
           <i data-feather="list"></i> ดูรายการงานวันนี้ (<span id="btnTaskCount">0</span>)
