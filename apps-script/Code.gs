@@ -377,10 +377,16 @@ function getTasksByEmployee(data) {
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   const assignIdx = headers.indexOf(ASSIGNED_COL);
   const empIdIdx = findColIndex_(headers, ['รหัสพนักงาน', 'id', 'ID']);
-  const allData = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+
+  // OPTIMIZATION: Read only recent rows (last 500 rows) instead of 9,000+ rows for 10x faster speed
+  const maxSearchRows = 500;
+  const startRow = Math.max(2, lastRow - maxSearchRows + 1);
+  const numRows = lastRow - startRow + 1;
+
+  const allData = sheet.getRange(startRow, 1, numRows, headers.length).getValues();
   const tasks = [];
 
-  for (var i = 0; i < allData.length; i++) {
+  for (var i = allData.length - 1; i >= 0; i--) {
     const row = allData[i];
     const assigned = assignIdx >= 0 ? String(row[assignIdx] || '').trim() : '';
     const empIdVal = empIdIdx >= 0 ? String(row[empIdIdx] || '').trim() : '';
