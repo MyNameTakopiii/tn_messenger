@@ -570,24 +570,42 @@ function getTaskEmployee(data) {
 }
 
 function getTaskById(data) {
+  data = data || {};
   const searchOrderNo = String(data.orderNo || '').trim().replace(/^0+/, '');
   if (!searchOrderNo) {
     return { result: 'error', message: 'กรุณาระบุเลขที่ใบสั่งงาน' };
   }
 
-  const allDataResult = getAllRowJson();
-  if (allDataResult.result !== 'success') return allDataResult;
-
-  const task = allDataResult.data.find(row => {
-    const rawVal = String(row['เลขที่ใบสั่งงาน'] || row.orderNo || row.id || '').trim();
-    return rawVal === searchOrderNo || rawVal.replace(/^0+/, '') === searchOrderNo;
-  });
-
-  if (!task) {
+  const sheet = getOrderSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
     return { result: 'error', message: 'ไม่พบเลขที่ใบสั่งงาน: ' + searchOrderNo };
   }
 
-  return { result: 'success', data: task };
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const orderColIdx = findColIndex_(headers, ['เลขที่ใบสั่งงาน', 'orderNo', 'id', 'ID']);
+
+  const orderValues = sheet.getRange(2, orderColIdx + 1, lastRow - 1, 1).getValues();
+  let foundRowIndex = -1;
+  const targetNum = parseInt(searchOrderNo, 10);
+
+  // Search from bottom up for maximum speed (recent orders are at the bottom)
+  for (var i = orderValues.length - 1; i >= 0; i--) {
+    const val = String(orderValues[i][0] || '').trim();
+    if (val === searchOrderNo || val.replace(/^0+/, '') === searchOrderNo || (!isNaN(targetNum) && parseInt(val, 10) === targetNum)) {
+      foundRowIndex = i + 2;
+      break;
+    }
+  }
+
+  if (foundRowIndex === -1) {
+    return { result: 'error', message: 'ไม่พบเลขที่ใบสั่งงาน: ' + searchOrderNo };
+  }
+
+  const rowData = sheet.getRange(foundRowIndex, 1, 1, headers.length).getValues()[0];
+  const taskObj = rowToObject_(headers, rowData);
+
+  return { result: 'success', data: taskObj };
 }
 
 function insertJob(data) {
