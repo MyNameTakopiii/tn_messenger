@@ -22,7 +22,7 @@ export async function fetchAssignedTasks(date) {
 
   const params = new URLSearchParams({
     action: "get_tasks_by_employee",
-    data: JSON.stringify({ employeeId, date: date || todayISO() }),
+    data: JSON.stringify({ employeeId, date: date || "" }),
   });
 
   const controller = new AbortController();
