@@ -366,8 +366,7 @@ function getTasksByEmployee(data) {
     return { result: 'error', message: 'employeeId required' };
   }
 
-  const dateFilter = (data.date || '').toString().trim() ||
-    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const dateFilter = (data.date || '').toString().trim();
 
   const sheet = getOrderSheet_();
   const lastRow = sheet.getLastRow();
@@ -377,17 +376,20 @@ function getTasksByEmployee(data) {
 
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   const assignIdx = headers.indexOf(ASSIGNED_COL);
+  const empIdIdx = findColIndex_(headers, ['รหัสพนักงาน', 'id', 'ID']);
   const allData = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
   const tasks = [];
 
   for (var i = 0; i < allData.length; i++) {
     const row = allData[i];
     const assigned = assignIdx >= 0 ? String(row[assignIdx] || '').trim() : '';
-    if (assigned !== employeeId) continue;
+    const empIdVal = empIdIdx >= 0 ? String(row[empIdIdx] || '').trim() : '';
+
+    if (assigned !== employeeId && empIdVal !== employeeId) continue;
 
     const obj = rowToObject_(headers, row);
     const collectDate = formatDateForFilter_(String(obj['วันที่เก็บเอกสาร'] || '').trim());
-    if (dateFilter && collectDate !== dateFilter) continue;
+    if (dateFilter && dateFilter !== 'all' && collectDate && collectDate !== dateFilter) continue;
 
     if (isTerminalTask_(obj)) continue;
     tasks.push(obj);
@@ -544,7 +546,7 @@ function getAllRowJson() {
 }
 
 function getTaskEmployee(data) {
-  const employeeId = String(data.id || '').trim();
+  const employeeId = String(data.id || data.employeeId || '').trim();
   if (!employeeId) {
     return { result: 'error', message: 'กรุณาระบุรหัสพนักงาน' };
   }
@@ -553,7 +555,9 @@ function getTaskEmployee(data) {
   if (allDataResult.result !== 'success') return allDataResult;
 
   const tasks = allDataResult.data.filter(row => {
-    return row['รหัสพนักงาน'] === employeeId;
+    const empId = String(row['รหัสพนักงาน'] || '').trim();
+    const assignedEmpId = String(row['รหัสพนักงานที่มอบหมาย'] || '').trim();
+    return empId === employeeId || assignedEmpId === employeeId;
   });
 
   return { result: 'success', count: tasks.length, data: tasks };
@@ -740,6 +744,17 @@ function updateJob(data) {
   });
 
   sheet.getRange(row, startCol, 1, numCols).setValues([finalRowValues]);
+
+  // Update ASSIGNED_COL (รหัสพนักงานที่มอบหมาย) if id or assignedEmployeeId is provided
+  const empIdToAssign = data.id || data.assignedEmployeeId;
+  if (empIdToAssign) {
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const assignIdx = headers.indexOf(ASSIGNED_COL);
+    if (assignIdx >= 0) {
+      sheet.getRange(row, assignIdx + 1).setValue(String(empIdToAssign));
+    }
+  }
+
   bumpLastModified_();
 
   // Trigger LINE Push Notification if user is linked
