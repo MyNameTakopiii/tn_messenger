@@ -473,8 +473,12 @@ if (form) {
       };
 
       // Submit via JSONP
-      const saveRes = await jsonp(SCRIPT_URL_ORDER, payload);
+      const saveRes = await jsonp(SCRIPT_URL_ORDER, { action: "insertJob", data: payload });
       console.log("บันทึกข้อมูลลง Google Sheets:", saveRes);
+
+      if (saveRes && saveRes.result === "error") {
+        throw new Error(saveRes.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      }
 
       alert(`✅ บันทึกข้อมูลสำเร็จ!\nเลขที่ใบสั่งงาน: ${orderNoStr}\nมอบหมายให้: ${assignedEmployeeName}`);
       f.reset();

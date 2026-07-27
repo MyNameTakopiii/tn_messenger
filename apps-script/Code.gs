@@ -46,8 +46,16 @@ function doGet(e) {
 }
 
 function handleRequest(e) {
-  const action = (e.parameter && e.parameter.action) || '';
+  if (!e) e = { parameter: {} };
+
+  let action = (e.parameter && e.parameter.action) || '';
   const callback = e.parameter && e.parameter.callback;
+  const dataObj = parseJsonParam(e, 'data');
+
+  if (!action && dataObj && dataObj.action) {
+    action = dataObj.action;
+  }
+
   let result;
 
   try {
@@ -63,10 +71,10 @@ function handleRequest(e) {
         result = getEmployeeList();
         break;
       case 'get_tasks_by_employee':
-        result = getTasksByEmployee(parseJsonParam(e, 'data'));
+        result = getTasksByEmployee(dataObj);
         break;
       case 'get_cover_report':
-        result = getCoverReport(parseJsonParam(e, 'data'));
+        result = getCoverReport(dataObj);
         break;
       case 'getOrderNo':
         result = getOrderNo();
@@ -75,13 +83,13 @@ function handleRequest(e) {
         result = getAllRowJson();
         break;
       case 'get_task_employee':
-        result = getTaskEmployee(parseJsonParam(e, 'data'));
+        result = getTaskEmployee(dataObj);
         break;
       case 'get_task_by_id':
-        result = getTaskById(parseJsonParam(e, 'data'));
+        result = getTaskById(dataObj);
         break;
       case 'update':
-        result = updateJob(parseJsonParam(e, 'data'));
+        result = updateJob(dataObj);
         break;
       case 'test_line_config':
         result = testLineConfig();
@@ -90,26 +98,25 @@ function handleRequest(e) {
       // doPost/JSON endpoints
       case 'insertJob':
       case 'add_work_order':
-        result = insertJob(parseJsonParam(e, 'data'));
+        result = insertJob(dataObj);
         break;
       case 'register_employee':
-        result = registerEmployee(parseJsonParam(e, 'data'));
+        result = registerEmployee(dataObj);
         break;
       case 'login_employee':
-        result = loginEmployee(parseJsonParam(e, 'data'));
+        result = loginEmployee(dataObj);
         break;
       case 'insert_news':
-        result = insertNews(parseJsonParam(e, 'data'));
+        result = insertNews(dataObj);
         break;
       case 'log_attendance':
-        result = logAttendance(parseJsonParam(e, 'data'));
+        result = logAttendance(dataObj);
         break;
 
       default:
         // Default fallthrough to support direct JSONP inserts from legacy clients
-        const payloadData = parseJsonParam(e, 'data');
-        if (payloadData && (payloadData.orderNo || payloadData.customerName)) {
-          result = insertJob(payloadData);
+        if (dataObj && (dataObj.orderNo || dataObj.customerName || dataObj.requester)) {
+          result = insertJob(dataObj);
         } else {
           result = { result: 'error', message: 'Unknown action: ' + action };
         }
@@ -127,12 +134,40 @@ function handleRequest(e) {
 }
 
 function parseJsonParam(e, key) {
-  const raw = (e.parameter && e.parameter[key]) || (e.postData && e.postData.contents) || '{}';
-  try {
-    return typeof raw === 'string' ? JSON.parse(raw) : raw;
-  } catch (_) {
-    return {};
+  if (!e) return {};
+
+  // 1. Check if e.parameter[key] exists (e.g. ?data={"orderNo":123,...})
+  if (e.parameter && e.parameter[key]) {
+    try {
+      const parsed = typeof e.parameter[key] === 'string' ? JSON.parse(e.parameter[key]) : e.parameter[key];
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    } catch (_) {}
   }
+
+  // 2. Check if e.postData.contents exists (POST payload)
+  if (e.postData && e.postData.contents) {
+    try {
+      const parsed = JSON.parse(e.postData.contents);
+      if (parsed && typeof parsed === 'object') {
+        if (key && parsed[key] && typeof parsed[key] === 'object') {
+          return parsed[key];
+        }
+        return parsed;
+      }
+    } catch (_) {}
+  }
+
+  // 3. Check if flat query parameters exist on e.parameter (e.g. ?action=insertJob&orderNo=123&customerName=John)
+  if (e.parameter && Object.keys(e.parameter).length > 0) {
+    const params = Object.assign({}, e.parameter);
+    delete params.callback;
+    delete params._;
+    return params;
+  }
+
+  return {};
 }
 
 // ─── Meta / cache bust ──────────────────────────────────────────────────────
@@ -546,6 +581,10 @@ function getTaskById(data) {
 }
 
 function insertJob(data) {
+  if (!data || typeof data !== 'object' || (!data.customerName && !data.requester && !data.collectDate)) {
+    return { result: 'error', message: 'กรุณากรอกข้อมูลใบสั่งงานให้ครบถ้วน' };
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(ORDER_TAB);
   if (!sheet) {
