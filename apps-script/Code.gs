@@ -758,13 +758,27 @@ function updateJob(data) {
   const existingEmpId = String(existingData[10] || '').trim();
   const newEmpId = String(data.id || '').trim();
 
-  // If assigning to a different employee and task is already assigned to someone else:
-  if (newEmpId && existingEmpId && existingEmpId !== newEmpId && data.allowReassign !== true) {
+  // Check today's date
+  const todayDateStr = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy');
+  const todayISOStr = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'yyyy-MM-dd');
+
+  // Check order creation timestamp & collect date
+  const orderTimestamp = String(sheet.getRange(row, 1).getValue() || '');
+  const collectDate = String(sheet.getRange(row, 2).getValue() || '');
+  
+  const isToday = !orderTimestamp || 
+                  orderTimestamp.includes(todayDateStr) || 
+                  collectDate.includes(todayDateStr) || 
+                  collectDate.includes(todayISOStr) ||
+                  orderTimestamp.includes(todayISOStr);
+
+  // If already assigned to a different employee AND it is TODAY:
+  if (newEmpId && existingEmpId && existingEmpId !== newEmpId && isToday && data.allowReassign !== true) {
     return {
       result: 'already_assigned',
       existingMessenger: existingMessenger || existingEmpId,
       existingId: existingEmpId,
-      message: 'ใบสั่งงาน #' + data.orderNo + ' ถูกมอบหมายให้ "' + (existingMessenger || existingEmpId) + '" อยู่แล้ว'
+      message: 'ใบสั่งงาน #' + data.orderNo + ' ถูกมอบหมายให้ "' + (existingMessenger || existingEmpId) + '" แล้วในวันนี้'
     };
   }
 
