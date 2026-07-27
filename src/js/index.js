@@ -13,6 +13,7 @@ import {
   fetchDocumentsList,
   SCRIPT_URL_ORDER
 } from '../config/api.js';
+import { showConfirmModal } from '../utils/modal.js';
 
 // Elements
 const provinceSelect = document.getElementById("province");
@@ -720,7 +721,7 @@ function startAssignScanner() {
   });
 }
 
-async function handleAssignWorkOrder(rawOrderNo) {
+async function handleAssignWorkOrder(rawOrderNo, allowReassign = false) {
   if (!selectedEmployee) {
     showAssignToast("⚠️ กรุณาเลือกพนักงานหรือกดรหัสพนักงานก่อนมอบหมายงาน", "warning");
     return;
@@ -734,7 +735,7 @@ async function handleAssignWorkOrder(rawOrderNo) {
 
   const paddedOrder = `#${cleanOrderId.padStart(4, "0")}`;
 
-  if (assignedSessionSet.has(cleanOrderId)) {
+  if (assignedSessionSet.has(cleanOrderId) && !allowReassign) {
     showAssignToast(`⚠️ ใบสั่งงาน ${paddedOrder} มอบหมายแล้วในเซสชันนี้`, "warning");
     if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
     return;
@@ -747,13 +748,30 @@ async function handleAssignWorkOrder(rawOrderNo) {
     : selectedEmployee.name;
 
   try {
-    postData(SCRIPT_URL_ORDER, "update", {
+    const res = await postData(SCRIPT_URL_ORDER, "update", {
       orderNo: cleanOrderId,
       id: selectedEmployee.id,
-      messengerName: empName
-    }).catch((err) => {
-      console.warn("Sheet update warning:", err);
+      messengerName: empName,
+      allowReassign: allowReassign
     });
+
+    if (res && res.result === "already_assigned") {
+      showConfirmModal({
+        title: "⚠️ ใบสั่งงานถูกมอบหมายแล้ว",
+        message: `ใบสั่งงาน ${paddedOrder} ถูกมอบหมายให้ "${res.existingMessenger}" (ID: ${res.existingId}) อยู่แล้ว คุณต้องการเปลี่ยนการมอบหมาย (Re-assign) ให้ "${empName}" หรือไม่?`,
+        confirmText: "ยืนยันโอนงาน",
+        cancelText: "ยกเลิก",
+        onConfirm: () => {
+          handleAssignWorkOrder(rawOrderNo, true);
+        }
+      });
+      return;
+    }
+
+    if (res && res.result === "error") {
+      showAssignToast(`❌ ${res.message || "เกิดข้อผิดพลาดในการมอบหมายงาน"}`, "error");
+      return;
+    }
 
     assignedSessionSet.add(cleanOrderId);
     showAssignToast(`✅ มอบหมายใบสั่งงาน ${paddedOrder} ให้ ${empName} เรียบร้อย!`, "success");

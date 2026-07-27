@@ -736,6 +736,20 @@ function updateJob(data) {
   const numCols = 11;
 
   const existingData = sheet.getRange(row, startCol, 1, numCols).getValues()[0];
+  const existingMessenger = String(existingData[9] || '').trim();
+  const existingEmpId = String(existingData[10] || '').trim();
+  const newEmpId = String(data.id || '').trim();
+
+  // If assigning to a different employee and task is already assigned to someone else:
+  if (newEmpId && existingEmpId && existingEmpId !== newEmpId && data.allowReassign !== true) {
+    return {
+      result: 'already_assigned',
+      existingMessenger: existingMessenger || existingEmpId,
+      existingId: existingEmpId,
+      message: 'ใบสั่งงาน #' + data.orderNo + ' ถูกมอบหมายให้ "' + (existingMessenger || existingEmpId) + '" อยู่แล้ว'
+    };
+  }
+
   const keys = [
     'result1', 'date1', 'note1', 
     'result2', 'date2', 'note2', 
