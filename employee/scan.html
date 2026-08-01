@@ -63,7 +63,18 @@
       <div class="manual-scan-box">
         <label for="manualOrderNo">✍️ หรือกด/กรอกเลขที่ใบสั่งงาน (Order No.):</label>
         <div class="input-with-button">
-          <input type="text" id="manualOrderNo" placeholder="เช่น 0001 หรือ 25" inputmode="numeric" />
+          <div class="input-wrapper">
+            <span class="input-prefix">#</span>
+            <input 
+              type="text" 
+              id="manualOrderNo" 
+              placeholder="เช่น 0001 หรือ 25" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              autocomplete="off"
+            />
+            <button type="button" id="btnClearManual" class="btn-clear-input" style="display: none;" title="ล้างข้อความ">&times;</button>
+          </div>
           <button type="button" id="btnManualScan" class="btn-manual-scan">
             <i data-feather="check-circle"></i> บันทึกรับงาน
           </button>

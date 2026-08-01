@@ -30,6 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Setup Manual Order Entry Listener
   const manualBtn = document.getElementById("btnManualScan");
   const manualInput = document.getElementById("manualOrderNo");
+  const clearBtn = document.getElementById("btnClearManual");
+
+  const updateClearBtnState = () => {
+    if (clearBtn && manualInput) {
+      clearBtn.style.display = manualInput.value.trim() ? "flex" : "none";
+    }
+  };
 
   const handleManualSubmit = () => {
     const val = (manualInput ? manualInput.value : "").trim();
@@ -38,14 +45,26 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     processScannedOrder(val);
+    updateClearBtnState();
   };
 
   if (manualBtn) manualBtn.addEventListener("click", handleManualSubmit);
   if (manualInput) {
+    manualInput.addEventListener("input", updateClearBtnState);
     manualInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         handleManualSubmit();
+      }
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (manualInput) {
+        manualInput.value = "";
+        manualInput.focus();
+        updateClearBtnState();
       }
     });
   }
@@ -165,7 +184,9 @@ async function processScannedOrder(rawOrderId) {
 
     // Clear manual input if filled
     const manualInput = document.getElementById("manualOrderNo");
+    const clearBtn = document.getElementById("btnClearManual");
     if (manualInput) manualInput.value = "";
+    if (clearBtn) clearBtn.style.display = "none";
 
     // 2. Fetch detailed info and update Google Sheet in BACKGROUND (Non-blocking)
     (async () => {
