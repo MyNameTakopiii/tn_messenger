@@ -995,20 +995,28 @@ function handleLineWebhook(e) {
 
 function processLineMessage(event) {
   const replyToken = event.replyToken;
+  const userId = (event.source && event.source.userId) || '';
   const inputText = (event.message.text || '').trim();
 
   if (!inputText) return;
+
+  // ใช้ Push API (userId) เป็นหลัก เพราะ Vercel proxy ตอบ LINE ไปก่อนแล้ว replyToken จะหมดอายุ
+  // ถ้าไม่มี userId ให้ fallback ไปใช้ replyToken
+  const usePush = !!userId;
 
   // ตรวจสอบว่าข้อความเป็นเลขที่ใบสั่งงานหรือไม่
   const normalizedJobCode = normalizeJobCode(inputText);
 
   if (!normalizedJobCode) {
     // ไม่ใช่ตัวเลข → ตอบข้อความต้อนรับ แนะนำให้พิมพ์เลขใบงาน
-    sendLineReply(replyToken,
-      'สวัสดีค่ะ ยินดีต้อนรับสู่บริการ TN Messenger 🎉\n\n' +
+    const welcomeMsg = 'สวัสดีค่ะ ยินดีต้อนรับสู่บริการ TN Messenger 🎉\n\n' +
       'กรุณาพิมพ์ เลขที่ใบสั่งงาน เพื่อตรวจสอบสถานะค่ะ\n' +
-      '(ตัวอย่าง: 0001 หรือ 25)'
-    );
+      '(ตัวอย่าง: 0001 หรือ 25)';
+    if (usePush) {
+      sendLinePushMessage(userId, welcomeMsg);
+    } else {
+      sendLineReply(replyToken, welcomeMsg);
+    }
     return;
   }
 
@@ -1017,7 +1025,8 @@ function processLineMessage(event) {
   const lastRow = sheet.getLastRow();
 
   if (lastRow < 2) {
-    sendLineReply(replyToken, '❌ ขออภัยค่ะ ระบบยังไม่มีข้อมูลใบสั่งงานในขณะนี้');
+    const noDataMsg = '❌ ขออภัยค่ะ ระบบยังไม่มีข้อมูลใบสั่งงานในขณะนี้';
+    if (usePush) { sendLinePushMessage(userId, noDataMsg); } else { sendLineReply(replyToken, noDataMsg); }
     return;
   }
 
@@ -1036,10 +1045,9 @@ function processLineMessage(event) {
   }
 
   if (!matchedJob) {
-    sendLineReply(replyToken,
-      '❌ ไม่พบเลขที่ใบสั่งงาน ' + inputText + '\n\n' +
-      'กรุณาตรวจสอบเลขที่ใบสั่งงานและลองพิมพ์ใหม่อีกครั้งค่ะ'
-    );
+    const notFoundMsg = '❌ ไม่พบเลขที่ใบสั่งงาน ' + inputText + '\n\n' +
+      'กรุณาตรวจสอบเลขที่ใบสั่งงานและลองพิมพ์ใหม่อีกครั้งค่ะ';
+    if (usePush) { sendLinePushMessage(userId, notFoundMsg); } else { sendLineReply(replyToken, notFoundMsg); }
     return;
   }
 
@@ -1077,7 +1085,11 @@ function processLineMessage(event) {
   const baseURL = PropertiesService.getScriptProperties().getProperty('BASE_URL') || 'https://tn-messenger-olive.vercel.app';
   replyText += `\n🔗 ติดตามสถานะ: ${baseURL}/customer/tracking_2.html?order=${orderNo}`;
 
-  sendLineReply(replyToken, replyText);
+  if (usePush) {
+    sendLinePushMessage(userId, replyText);
+  } else {
+    sendLineReply(replyToken, replyText);
+  }
 }
 
 function normalizePhone(phone) {
@@ -1201,6 +1213,38 @@ function sendLineReply(replyToken, text) {
 
   const response = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', options);
   console.log('LINE Reply Response (' + response.getResponseCode() + '): ' + response.getContentText());
+}
+
+function sendLinePushMessage(userId, text) {
+  const rawToken = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN') || '';
+  const lineChannelAccessToken = rawToken.trim();
+  if (!lineChannelAccessToken) {
+    console.error('LINE_CHANNEL_ACCESS_TOKEN is not set, cannot push');
+    return;
+  }
+
+  const payload = {
+    to: userId,
+    messages: [
+      {
+        type: 'text',
+        text: text
+      }
+    ]
+  };
+
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    headers: {
+      'Authorization': 'Bearer ' + lineChannelAccessToken
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  const response = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', options);
+  console.log('LINE Push Response (' + response.getResponseCode() + '): ' + response.getContentText());
 }
 
 function sendLinePushNotification(lineUserId, rowObj) {
