@@ -10,17 +10,19 @@ export default async function handler(req, res) {
     try {
       const payload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
 
-      // Forward to Google Apps Script asynchronously
-      fetch(scriptUrl, {
+      // Forward to Google Apps Script and WAIT for completion so Vercel container stays alive
+      const gasRes = await fetch(scriptUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-line-signature': req.headers['x-line-signature'] || req.headers['X-Line-Signature'] || ''
         },
         body: payload
-      }).then(r => r.text()).then(txt => console.log('GAS Forward Response:', txt)).catch(err => console.error('GAS Forward Error:', err));
+      });
 
-      // Instantly return 200 OK to LINE Platform to pass verification and avoid 302 redirect issues
+      const gasText = await gasRes.text();
+      console.log('GAS Forward Response:', gasText);
+
       return res.status(200).json({ result: 'success' });
     } catch (err) {
       console.error('LINE Proxy Error:', err);
