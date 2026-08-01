@@ -19,12 +19,9 @@ const ASSIGNED_COL = 'รหัสพนักงานที่มอบหม�
 const TERMINAL_STATUSES = ['สำเร็จ', 'ลูกค้าขอยกเลิก'];
 const PASSWORD_PEPPER = 'temm_tnmessenger';
 
-function authorizeUrlFetch() {
-  const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/info', {
-    headers: { 'Authorization': 'Bearer test' },
-    muteHttpExceptions: true
-  });
-  Logger.log('Auth check status: ' + res.getResponseCode());
+function forceAuthorizeLINE() {
+  // Raw call without try-catch or muteHttpExceptions to force Apps Script engine to display Authorization Required dialog
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/info');
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────
