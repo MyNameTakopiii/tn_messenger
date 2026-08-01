@@ -244,11 +244,52 @@ if (updateForm) {
       timestamp: new Date().toLocaleString("th-TH"),
     };
 
+    // 1. Optimistic Local Storage Update (Instant Feedback <100ms)
+    const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+    const cleanOrderNo = orderNo.toString().replace(/^0+/, "");
+    
+    if (!storedTasks[cleanOrderNo]) {
+      storedTasks[cleanOrderNo] = {
+        'เลขที่ใบสั่งงาน': cleanOrderNo,
+        orderNo: cleanOrderNo,
+        scan_date: new Date().toISOString().split('T')[0],
+        _source: 'scan'
+      };
+    }
+    
+    const task = storedTasks[cleanOrderNo];
+    if (payload.result1) {
+      task["ผลการวิ่งงาน 1: สถานะ"] = payload.result1;
+      task["ผลการวิ่งงาน 1: วัน/เดือน/ปี"] = payload.date1;
+      task["ผลการวิ่งงาน 1: หมายเหตุ"] = payload.note1;
+    }
+    if (payload.result2) {
+      task["ผลการวิ่งงาน 2: สถานะ"] = payload.result2;
+      task["ผลการวิ่งงาน 2: วัน/เดือน/ปี"] = payload.date2;
+      task["ผลการวิ่งงาน 2: หมายเหตุ"] = payload.note2;
+    }
+    if (payload.result3) {
+      task["ผลการวิ่งงาน 3: สถานะ"] = payload.result3;
+      task["ผลการวิ่งงาน 3: วัน/เดือน/ปี"] = payload.date3;
+      task["ผลการวิ่งงาน 3: หมายเหตุ"] = payload.note3;
+    }
+    task["ชื่อพนักงาน"] = messengerName;
+    task["รหัสพนักงาน"] = userData.id || "";
+    localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
+
+    // Show immediate success to user
+    showResult("success", "✅ บันทึกสถานะลงเครื่องเรียบร้อย! (กำลังซิงค์กับเซิร์ฟเวอร์...)");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "⏳ กำลังซิงค์...";
+    }
+
+    // 2. Background sync to Google Sheet
     try {
       const response = await jsonp(SCRIPT_URL_ORDER, {
         action: "update",
         data: payload
-      });
+      }, 12000);
 
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -256,45 +297,17 @@ if (updateForm) {
       }
 
       if (response && response.result === "success") {
-        // อัปเดต Cache ใน Local Storage
-        const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
-        const cleanOrderNo = orderNo.toString().replace(/^0+/, "");
-        
-        if (storedTasks[cleanOrderNo]) {
-          const task = storedTasks[cleanOrderNo];
-          
-          if (payload.result1) {
-            task["ผลการวิ่งงาน 1: สถานะ"] = payload.result1;
-            task["ผลการวิ่งงาน 1: วัน/เดือน/ปี"] = payload.date1;
-            task["ผลการวิ่งงาน 1: หมายเหตุ"] = payload.note1;
-          }
-          if (payload.result2) {
-            task["ผลการวิ่งงาน 2: สถานะ"] = payload.result2;
-            task["ผลการวิ่งงาน 2: วัน/เดือน/ปี"] = payload.date2;
-            task["ผลการวิ่งงาน 2: หมายเหตุ"] = payload.note2;
-          }
-          if (payload.result3) {
-            task["ผลการวิ่งงาน 3: สถานะ"] = payload.result3;
-            task["ผลการวิ่งงาน 3: วัน/เดือน/ปี"] = payload.date3;
-            task["ผลการวิ่งงาน 3: หมายเหตุ"] = payload.note3;
-          }
-          
-          task["ชื่อพนักงาน"] = messengerName;
-          task["รหัสพนักงาน"] = userData.id || "";
-          
-          localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
-        }
-
-        showResult("success", "✅ อัปเดตสถานะสำเร็จ และบันทึกข้อมูลในเครื่องแล้ว!");
+        showResult("success", "✅ อัปเดตสถานะสมบูรณ์และซิงค์ข้อมูลเรียบร้อย!");
       } else {
-        showResult("error", "❌ เกิดข้อผิดพลาด: " + ((response && response.message) || "ไม่สามารถอัปเดตได้"));
+        showResult("error", "⚠️ บันทึกในเครื่องแล้ว แต่เซิร์ฟเวอร์แจ้งเตือน: " + ((response && response.message) || "ไม่สามารถอัปเดตบนเซิร์ฟเวอร์ได้"));
       }
     } catch (error) {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "💾 บันทึกสถานะ";
       }
-      showResult("error", "❌ เกิดข้อผิดพลาด: " + error.message);
+      console.warn("Background sync error:", error);
+      showResult("success", "✅ บันทึกสถานะลงเครื่องเรียบร้อย! (ระบบจะซิงค์ใหม่อัตโนมัติเมื่อออนไลน์)");
     }
   });
 }

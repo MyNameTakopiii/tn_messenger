@@ -19,7 +19,9 @@ const modalTitle = document.getElementById("modal-title");
 
 document.addEventListener("DOMContentLoaded", () => {
   fetchTasks();
-  setInterval(fetchTasks, 30000);
+  setInterval(() => {
+    if (document.visibilityState === "visible") fetchTasks();
+  }, 45000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") fetchTasks();
   });

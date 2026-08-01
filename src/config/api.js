@@ -14,11 +14,11 @@ export const SHEET_A_ID = import.meta.env.VITE_SHEET_A_ID || "1FkcnGM31UU1UNgsPy
  * JSONP request helper to bypass CORS issues with Google Apps Script GET requests
  * @param {string} url - Base URL
  * @param {object} params - Query parameters
- * @param {number} timeoutMs - Timeout in milliseconds (default 25000ms)
+ * @param {number} timeoutMs - Timeout in milliseconds (default 12000ms)
  * @param {number} retries - Number of retries on timeout/error (default 1)
  * @returns {Promise<any>}
  */
-export function jsonp(url, params = {}, timeoutMs = 25000, retries = 1) {
+export function jsonp(url, params = {}, timeoutMs = 12000, retries = 1) {
   return new Promise((resolve, reject) => {
     const callbackName = "jsonp_cb_" + Math.random().toString(36).substring(2, 15);
     let timer = null;

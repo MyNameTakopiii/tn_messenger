@@ -108,18 +108,20 @@ h2 {
 
 .info-label {
   color: var(--text-light);
-  min-width: 110px;
+  min-width: 95px;
   flex-shrink: 0;
+  font-size: 13px;
 }
 
 .info-value {
   color: var(--text);
   font-weight: 500;
+  word-break: break-word;
 }
 
 .card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 10px;
   margin-top: 15px;
   padding-top: 15px;

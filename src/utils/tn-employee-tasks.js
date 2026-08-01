@@ -106,12 +106,31 @@ export function mergeTasks(serverTasks, scannedTasks) {
   return Array.from(map.values());
 }
 
-export async function loadMergedTasks() {
-  const [assigned, scanned] = await Promise.all([
-    fetchAssignedTasks(),
-    Promise.resolve(getScannedTasks()),
-  ]);
-  return mergeTasks(assigned, scanned);
+let _mergedTasksPromise = null;
+let _mergedTasksExpiry = 0;
+
+export async function loadMergedTasks(forceRefresh = false) {
+  const now = Date.now();
+  if (_mergedTasksPromise && now < _mergedTasksExpiry && !forceRefresh) {
+    return _mergedTasksPromise;
+  }
+
+  _mergedTasksExpiry = now + 10000; // 10 second memory cache window
+  _mergedTasksPromise = (async () => {
+    try {
+      const [assigned, scanned] = await Promise.all([
+        fetchAssignedTasks(),
+        Promise.resolve(getScannedTasks()),
+      ]);
+      return mergeTasks(assigned, scanned);
+    } catch (err) {
+      _mergedTasksPromise = null;
+      _mergedTasksExpiry = 0;
+      throw err;
+    }
+  })();
+
+  return _mergedTasksPromise;
 }
 
 // Keep backward compatibility for older script links if needed, but we will mostly use ESM

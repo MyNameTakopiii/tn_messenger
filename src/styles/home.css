@@ -10,7 +10,7 @@ body {
   max-width: 480px;
   width: 100%;
   background: var(--white);
-  padding: 40px;
+  padding: clamp(16px, 5vw, 40px);
   border-radius: 18px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   border-top: 8px solid var(--primary);
@@ -18,16 +18,16 @@ body {
 }
 
 .user-avatar {
-  width: 90px;
-  height: 90px;
-  margin: 0 auto 20px;
+  width: clamp(70px, 18vw, 90px);
+  height: clamp(70px, 18vw, 90px);
+  margin: 0 auto 16px;
   background: var(--primary);
   color: white;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 36px;
+  font-size: clamp(28px, 7vw, 36px);
   font-weight: 700;
   box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3);
 }
@@ -35,19 +35,20 @@ body {
 h2 {
   color: var(--primary);
   margin-bottom: 5px;
+  font-size: clamp(18px, 5vw, 24px);
 }
 
 .welcome-text {
-  font-size: 16px;
+  font-size: clamp(13px, 3.5vw, 16px);
   color: var(--text-light);
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .info-card {
   text-align: left;
   background: #f8fafc;
   border-radius: 12px;
-  padding: 20px;
+  padding: clamp(12px, 3vw, 20px);
   margin-bottom: 25px;
   border: 1px solid #e2e8f0;
 }
@@ -57,6 +58,7 @@ h2 {
   justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid #edf2f7;
+  font-size: clamp(12px, 3.2vw, 14px);
 }
 
 .info-item:last-child {
@@ -73,6 +75,7 @@ h2 {
   font-size: 15px;
   color: var(--text);
   font-weight: 600;
+  word-break: break-word;
 }
 
 /* Attendance Card */
@@ -80,7 +83,7 @@ h2 {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 16px;
+  padding: clamp(12px, 3.5vw, 16px);
   margin-bottom: 24px;
   text-align: left;
 }
@@ -89,6 +92,8 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid #e2e8f0;
@@ -117,15 +122,17 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .status-indicator {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .time-display {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--primary);
 }
@@ -186,7 +193,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 14px;
 }
 
 .modal-card {
@@ -207,7 +214,7 @@ h2 {
 .modal-header {
   background: var(--primary);
   color: white;
-  padding: 16px 20px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -215,7 +222,7 @@ h2 {
 
 .modal-header h3 {
   color: white;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   margin: 0;
 }
@@ -234,19 +241,21 @@ h2 {
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 16px;
   text-align: left;
 }
 
 .summary-employee-info {
   background: #f8fafc;
   border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 14px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
   border: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
 }
 
 .summary-date {
@@ -257,7 +266,7 @@ h2 {
   background: #eff6ff;
   border: 1px solid #bfdbfe;
   border-radius: 12px;
-  padding: 14px;
+  padding: 12px;
 }
 
 .duration-item {
@@ -290,14 +299,14 @@ h2 {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .stat-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px;
   text-align: center;
 }
 
@@ -307,7 +316,7 @@ h2 {
 .stat-card.cancel { border-color: #fecaca; background: #fef2f2; }
 
 .stat-num {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   margin-bottom: 2px;
 }
@@ -318,13 +327,13 @@ h2 {
 .stat-card.cancel .stat-num { color: #dc2626; }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #475569;
   font-weight: 600;
 }
 
 .modal-footer {
-  padding: 16px 20px;
+  padding: 14px 16px;
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
 }
@@ -340,5 +349,24 @@ h2 {
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+@media (max-width: 360px) {
+  body {
+    padding: 10px 6px 80px 6px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .stat-num {
+    font-size: 17px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
 }
 

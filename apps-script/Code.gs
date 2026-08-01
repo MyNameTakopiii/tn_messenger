@@ -539,15 +539,18 @@ function getOrderNo() {
   return { result: 'success', orderNo: nextOrderNo };
 }
 
-function getAllRowJson() {
+function getAllRowJson(maxRows) {
   const sheet = getOrderSheet_();
-  const data = sheet.getDataRange().getValues();
-  if (data.length < 2) return { result: 'success', count: 0, data: [] };
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { result: 'success', count: 0, data: [] };
 
-  const headers = data[0];
-  const rows = data.slice(1);
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const limit = maxRows || 1000;
+  const startRow = Math.max(2, lastRow - limit + 1);
+  const numRows = lastRow - startRow + 1;
+  const dataRange = sheet.getRange(startRow, 1, numRows, headers.length).getValues();
 
-  const formattedRows = rows
+  const formattedRows = dataRange
     .filter(row => row.some(cell => cell.toString().trim() !== ""))
     .map(row => {
       const obj = {};
@@ -569,19 +572,33 @@ function getAllRowJson() {
 }
 
 function getTaskEmployee(data) {
+  data = data || {};
   const employeeId = String(data.id || data.employeeId || '').trim();
   if (!employeeId) {
     return { result: 'error', message: 'กรุณาระบุรหัสพนักงาน' };
   }
 
-  const allDataResult = getAllRowJson();
-  if (allDataResult.result !== 'success') return allDataResult;
+  const sheet = getOrderSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { result: 'success', count: 0, data: [] };
 
-  const tasks = allDataResult.data.filter(row => {
-    const empId = String(row['รหัสพนักงาน'] || '').trim();
-    const assignedEmpId = String(row['รหัสพนักงานที่มอบหมาย'] || '').trim();
-    return empId === employeeId || assignedEmpId === employeeId;
-  });
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const maxSearch = 500;
+  const startRow = Math.max(2, lastRow - maxSearch + 1);
+  const numRows = lastRow - startRow + 1;
+  const allData = sheet.getRange(startRow, 1, numRows, headers.length).getValues();
+
+  const tasks = [];
+  const empIdLower = employeeId.toLowerCase();
+
+  for (let i = allData.length - 1; i >= 0; i--) {
+    const obj = rowToObject_(headers, allData[i]);
+    const empId = String(obj['รหัสพนักงาน'] || '').trim().toLowerCase();
+    const assignedEmpId = String(obj['รหัสพนักงานที่มอบหมาย'] || '').trim().toLowerCase();
+    if (empId === empIdLower || assignedEmpId === empIdLower) {
+      tasks.push(obj);
+    }
+  }
 
   return { result: 'success', count: tasks.length, data: tasks };
 }
@@ -601,17 +618,34 @@ function getTaskById(data) {
 
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   const orderColIdx = findColIndex_(headers, ['เลขที่ใบสั่งงาน', 'orderNo', 'id', 'ID']);
+  const colNumber = orderColIdx >= 0 ? orderColIdx + 1 : 17;
 
-  const orderValues = sheet.getRange(2, orderColIdx + 1, lastRow - 1, 1).getValues();
+  // Ultra-Fast 2-Step Search: Search last 500 rows of OrderNo column first
+  const maxSearch = 500;
+  const searchStart = Math.max(2, lastRow - maxSearch + 1);
+  const searchCount = lastRow - searchStart + 1;
+  const orderValues = sheet.getRange(searchStart, colNumber, searchCount, 1).getValues();
+
   let foundRowIndex = -1;
   const targetNum = parseInt(searchOrderNo, 10);
 
-  // Search from bottom up for maximum speed (recent orders are at the bottom)
   for (var i = orderValues.length - 1; i >= 0; i--) {
     const val = String(orderValues[i][0] || '').trim();
     if (val === searchOrderNo || val.replace(/^0+/, '') === searchOrderNo || (!isNaN(targetNum) && parseInt(val, 10) === targetNum)) {
-      foundRowIndex = i + 2;
+      foundRowIndex = searchStart + i;
       break;
+    }
+  }
+
+  // Fallback search remaining rows if not found in last 500 rows
+  if (foundRowIndex === -1 && searchStart > 2) {
+    const remainingValues = sheet.getRange(2, colNumber, searchStart - 2, 1).getValues();
+    for (var i = remainingValues.length - 1; i >= 0; i--) {
+      const val = String(remainingValues[i][0] || '').trim();
+      if (val === searchOrderNo || val.replace(/^0+/, '') === searchOrderNo || (!isNaN(targetNum) && parseInt(val, 10) === targetNum)) {
+        foundRowIndex = i + 2;
+        break;
+      }
     }
   }
 
@@ -619,6 +653,7 @@ function getTaskById(data) {
     return { result: 'error', message: 'ไม่พบเลขที่ใบสั่งงาน: ' + searchOrderNo };
   }
 
+  // Fetch ONLY the target row
   const rowData = sheet.getRange(foundRowIndex, 1, 1, headers.length).getValues()[0];
   const taskObj = rowToObject_(headers, rowData);
 
@@ -758,15 +793,41 @@ function updateJob(data) {
     return { result: 'error', message: 'ยังไม่มีข้อมูลในระบบ' };
   }
 
-  const orders = sheet.getRange(2, 17, lastRow - 1, 1).getValues();
   const target = parseInt(data.orderNo, 10);
-  const idx = orders.findIndex(r => parseInt(r[0], 10) === target);
+  const targetStr = String(data.orderNo || '').trim().replace(/^0+/, '');
+
+  // Search last 500 rows from bottom-up for maximum speed
+  const maxSearch = 500;
+  const searchStart = Math.max(2, lastRow - maxSearch + 1);
+  const searchCount = lastRow - searchStart + 1;
+  const orders = sheet.getRange(searchStart, 17, searchCount, 1).getValues();
+
+  let idx = -1;
+  for (let i = orders.length - 1; i >= 0; i--) {
+    const val = String(orders[i][0] || '').trim();
+    if (parseInt(val, 10) === target || val.replace(/^0+/, '') === targetStr) {
+      idx = searchStart + i;
+      break;
+    }
+  }
+
+  // Fallback if not found in last 500 rows
+  if (idx === -1 && searchStart > 2) {
+    const remainingOrders = sheet.getRange(2, 17, searchStart - 2, 1).getValues();
+    for (let i = remainingOrders.length - 1; i >= 0; i--) {
+      const val = String(remainingOrders[i][0] || '').trim();
+      if (parseInt(val, 10) === target || val.replace(/^0+/, '') === targetStr) {
+        idx = i + 2;
+        break;
+      }
+    }
+  }
 
   if (idx === -1) {
     return { result: 'error', message: 'ไม่พบเลขที่ใบงาน: ' + data.orderNo };
   }
 
-  const row = idx + 2;
+  const row = idx;
   const startCol = 18;
   const numCols = 11;
 
@@ -826,14 +887,17 @@ function updateJob(data) {
 
   bumpLastModified_();
 
-  // Trigger LINE Push Notification if user is linked
+  // Trigger LINE Push Notification if user is linked (check Col 30 / LINE User ID)
   try {
-    const updatedHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const updatedRowData = sheet.getRange(row, 1, 1, updatedHeaders.length).getValues()[0];
-    const updatedRowObj = rowToObject_(updatedHeaders, updatedRowData);
-    const lineUserId = updatedRowObj['LINE User ID'];
-    if (lineUserId && lineUserId.trim()) {
-      sendLinePushNotification(lineUserId, updatedRowObj);
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const lineColIdx = headers.indexOf('LINE User ID');
+    if (lineColIdx >= 0) {
+      const lineUserId = String(sheet.getRange(row, lineColIdx + 1).getValue() || '').trim();
+      if (lineUserId) {
+        const updatedRowData = sheet.getRange(row, 1, 1, headers.length).getValues()[0];
+        const updatedRowObj = rowToObject_(headers, updatedRowData);
+        sendLinePushNotification(lineUserId, updatedRowObj);
+      }
     }
   } catch (err) {
     console.warn("LINE push notification failed: " + err);
@@ -1036,17 +1100,41 @@ function processLineMessage(event) {
   }
 
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const allData = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
-  const orderNoIdx = headers.indexOf('เลขที่ใบสั่งงาน');
+  const orderNoIdx = findColIndex_(headers, ['เลขที่ใบสั่งงาน', 'orderNo', 'id', 'ID']);
+  const colNumber = orderNoIdx >= 0 ? orderNoIdx + 1 : 17;
 
-  // ค้นหาใบงานที่ตรงกับเลขที่ระบุ
+  // Ultra-Fast Search: Check last 500 rows bottom-up first
+  const maxSearch = 500;
+  const searchStart = Math.max(2, lastRow - maxSearch + 1);
+  const searchCount = lastRow - searchStart + 1;
+  const recentOrders = sheet.getRange(searchStart, colNumber, searchCount, 1).getValues();
+
   let matchedJob = null;
-  for (let i = 0; i < allData.length; i++) {
-    const rowOrderNo = String(allData[i][orderNoIdx] || '').trim();
+  let targetRow = -1;
+
+  for (let i = recentOrders.length - 1; i >= 0; i--) {
+    const rowOrderNo = String(recentOrders[i][0] || '').trim();
     if (normalizeJobCode(rowOrderNo) === normalizedJobCode) {
-      matchedJob = rowToObject_(headers, allData[i]);
+      targetRow = searchStart + i;
       break;
     }
+  }
+
+  // Fallback if not found in last 500 rows
+  if (targetRow === -1 && searchStart > 2) {
+    const olderOrders = sheet.getRange(2, colNumber, searchStart - 2, 1).getValues();
+    for (let i = olderOrders.length - 1; i >= 0; i--) {
+      const rowOrderNo = String(olderOrders[i][0] || '').trim();
+      if (normalizeJobCode(rowOrderNo) === normalizedJobCode) {
+        targetRow = i + 2;
+        break;
+      }
+    }
+  }
+
+  if (targetRow !== -1) {
+    const rowData = sheet.getRange(targetRow, 1, 1, headers.length).getValues()[0];
+    matchedJob = rowToObject_(headers, rowData);
   }
 
   if (!matchedJob) {

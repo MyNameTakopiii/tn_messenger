@@ -204,3 +204,25 @@ a.nav-item {
   z-index: 9999;
 }
 
+/* Responsive adjustments */
+@media (max-width: 380px) {
+  body {
+    padding: 12px 8px 85px 8px;
+  }
+
+  .nav-item span {
+    font-size: 10px !important;
+  }
+
+  .nav-item i,
+  .nav-item svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+}
+

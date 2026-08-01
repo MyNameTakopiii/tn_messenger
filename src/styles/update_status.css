@@ -162,12 +162,23 @@ input[readonly] {
   }
 
   .box {
-    padding: 20px;
+    padding: 14px;
     border-radius: 12px;
   }
 
   h1 {
-    font-size: 20px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  body {
+    padding: 6px;
+    padding-bottom: 85px;
+  }
+
+  .box {
+    padding: 10px;
   }
 }
 
