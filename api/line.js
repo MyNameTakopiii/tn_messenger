@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwutGjM8fg__QRCBYBiDsCJ8ttkQ-97v8gER_C_W7VB4TG5-vvX5doUXlbGc5bvZYM5/exec?action=line';
+  const GAS_URL = process.env.VITE_SCRIPT_URL_ORDER || 'https://script.google.com/macros/s/AKfycbyoluv9odTzcVpW2NZ9eT_06a0MnSrV4CfBFODrm8DYJFNywIVGFx-Z3aKhwataOChN/exec?action=line';
 
   const payload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
   const signature = req.headers['x-line-signature'] || req.headers['X-Line-Signature'] || '';
