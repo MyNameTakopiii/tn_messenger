@@ -22,7 +22,12 @@ const PASSWORD_PEPPER = 'temm_tnmessenger';
 // ─── Router ───────────────────────────────────────────────────────────────
 
 function doPost(e) {
-  // Check if it is a LINE webhook (has signature or events)
+  // Check if action parameter is 'line' or if it has LINE signature/events
+  const action = (e && e.parameter && e.parameter.action) || '';
+  if (action === 'line') {
+    return handleLineWebhook(e);
+  }
+
   const headers = e.headers || {};
   const signature = headers['x-line-signature'] || headers['X-Line-Signature'];
   if (signature) {
@@ -1167,11 +1172,12 @@ function getLatestStatusOfJob(rowObj) {
 }
 
 function sendLineReply(replyToken, text) {
-  const lineChannelAccessToken = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN');
+  let lineChannelAccessToken = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN');
   if (!lineChannelAccessToken) {
     console.error('LINE_CHANNEL_ACCESS_TOKEN is not set, cannot reply');
     return;
   }
+  lineChannelAccessToken = lineChannelAccessToken.trim();
 
   const payload = {
     replyToken: replyToken,
