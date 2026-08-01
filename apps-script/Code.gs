@@ -706,7 +706,7 @@ function insertJob(data) {
 
 function sendConfirmationEmail_(data, orderNo) {
   const paddedOrderNo = String(orderNo).padStart(4, '0');
-  const updateURL = `${data.baseURL || 'https://tn-messenger.vercel.app'}/tracking.html?order=${paddedOrderNo}`;
+  const updateURL = `${data.baseURL || 'https://tn-messenger-olive.vercel.app'}/customer/tracking_2.html?order=${paddedOrderNo}`;
 
   const subject = `📋 ขอบคุณที่กรอกข้อมูลใบสั่งงาน #${paddedOrderNo}`;
   const htmlBody = `
@@ -1069,8 +1069,8 @@ function processLineMessage(event) {
     replyText += `\n👤 พนักงานจัดส่ง: ยังไม่ได้มอบหมาย\n`;
   }
 
-  const baseURL = PropertiesService.getScriptProperties().getProperty('BASE_URL') || 'https://tn-messenger.vercel.app';
-  replyText += `\n🔗 ติดตามสถานะ: ${baseURL}/tracking.html?order=${orderNo}`;
+  const baseURL = PropertiesService.getScriptProperties().getProperty('BASE_URL') || 'https://tn-messenger-olive.vercel.app';
+  replyText += `\n🔗 ติดตามสถานะ: ${baseURL}/customer/tracking_2.html?order=${orderNo}`;
 
   sendLineReply(replyToken, replyText);
 }
@@ -1220,8 +1220,8 @@ function sendLinePushNotification(lineUserId, rowObj) {
     messageText += `หมายเหตุ: ${latest.note}\n`;
   }
   
-  const baseURL = PropertiesService.getScriptProperties().getProperty('BASE_URL') || 'https://tn-messenger.vercel.app';
-  messageText += `\n🔗 ติดตามสถานะ: ${baseURL}/tracking.html?order=${orderNo}`;
+  const baseURL = PropertiesService.getScriptProperties().getProperty('BASE_URL') || 'https://tn-messenger-olive.vercel.app';
+  messageText += `\n🔗 ติดตามสถานะ: ${baseURL}/customer/tracking_2.html?order=${orderNo}`;
 
   const payload = {
     to: lineUserId,
@@ -1366,6 +1366,8 @@ function testLineConfig() {
     report.tokenTestResult = '❌ เกิดข้อผิดพลาดทางเทคนิคระหว่างเชื่อมต่อหา LINE: ' + err.message;
   }
 
+  console.log("LINE Test Report:\n" + JSON.stringify(report, null, 2));
+  Logger.log(report);
   return report;
 }
 

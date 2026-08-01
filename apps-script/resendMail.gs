@@ -22,7 +22,7 @@ function resendMail(orderNo) {
 
   const paddedOrderNo = String(ORDER_NO).padStart(4, '0');
   const updateURL =
-    'https://tn-messenger-serviceso.web.app/tracking.html?order=' + paddedOrderNo;
+    'https://tn-messenger-olive.vercel.app/customer/tracking_2.html?order=' + paddedOrderNo;
 
   const subject = `📋 ขอบคุณที่กรอกข้อมูลใบสั่งงาน #${paddedOrderNo}`;
   const htmlBody = `

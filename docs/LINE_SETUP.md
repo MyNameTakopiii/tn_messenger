@@ -45,7 +45,7 @@
 3. กด **Add script property** และเพิ่มค่าดังนี้:
    - **Property:** `LINE_CHANNEL_SECRET` | **Value:** *ใส่ค่า Channel Secret ที่คัดลอกมา*
    - **Property:** `LINE_CHANNEL_ACCESS_TOKEN` | **Value:** *ใส่ค่า Channel Access Token ที่คัดลอกมา*
-   - **Property:** `BASE_URL` (ทางเลือก) | **Value:** `https://tn-messenger.vercel.app` *(หรือ URL เว็บของคุณ เพื่อใช้ส่งลิงก์ติดตามงาน)*
+   - **Property:** `BASE_URL` (ทางเลือก) | **Value:** `https://tn-messenger-olive.vercel.app` *(หรือ URL เว็บของคุณ เพื่อใช้ส่งลิงก์ติดตามงาน)*
 4. กด **Save script properties**
 
 ---
