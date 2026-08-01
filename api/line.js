@@ -1,5 +1,14 @@
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || '7E7yx2m+fhOupAMs3UQq/O0J4KVRTIOtbTxCqBw9EfX8laF6a7y06kJjAbXizRBB/qEHnfdzMuXibssLIRRYCeNwD9A7RYxHRYD2+ig+7mHx8PVq5+2NCPRrYIGyWUXEWtY6+iA9NjKn4GZYc5rfsAdB04t89/1O/w1cDnyilFU=';
-const GAS_URL = process.env.VITE_SCRIPT_URL_ORDER || 'https://script.google.com/macros/s/AKfycbxcVeMiUy1gy95f-1x6bhPHuguyL8nH-gpe98eOfgyMC_FKfYYEGdRTr6Mp_tP-HPEF/exec';
+
+const GAS_URLS = [
+  process.env.VITE_SCRIPT_URL_ORDER || 'https://script.google.com/macros/s/AKfycbxcVeMiUy1gy95f-1x6bhPHuguyL8nH-gpe98eOfgyMC_FKfYYEGdRTr6Mp_tP-HPEF/exec',
+  'https://script.google.com/macros/s/AKfycbwutGjM8fg__QRCBYBiDsCJ8ttkQ-97v8gER_C_W7VB4TG5-vvX5doUXlbGc5bvZYM5/exec'
+];
+
+const WELCOME_GUIDE_TEXT = 
+  'สวัสดีค่ะ ยินดีต้อนรับสู่บริการ TN Messenger 🎉\n\n' +
+  'กรุณาพิมพ์ เลขที่ใบสั่งงาน เพื่อตรวจสอบสถานะค่ะ\n' +
+  '(ตัวอย่าง: 0001 หรือ 25)';
 
 function normalizeJobCode(code) {
   if (!code) return '';
@@ -12,6 +21,7 @@ function normalizeJobCode(code) {
 }
 
 async function sendLineReply(replyToken, text) {
+  if (!replyToken) return;
   const url = 'https://api.line.me/v2/bot/message/reply';
   const token = (process.env.LINE_CHANNEL_ACCESS_TOKEN || LINE_CHANNEL_ACCESS_TOKEN).trim();
   
@@ -34,6 +44,37 @@ async function sendLineReply(replyToken, text) {
   }
 }
 
+async function fetchTaskFromGAS(normalizedCode) {
+  for (const baseUrl of GAS_URLS) {
+    // Method 1: Try get_task_by_id
+    try {
+      const res = await fetch(`${baseUrl}?action=get_task_by_id&data=${encodeURIComponent(JSON.stringify({ orderNo: normalizedCode }))}`);
+      const data = await res.json();
+      if (data.result === 'success' && data.data) {
+        return data.data;
+      }
+    } catch (e) {
+      console.warn(`[LINE Bot] get_task_by_id failed on ${baseUrl}`);
+    }
+
+    // Method 2: Fallback to get_all_row_json
+    try {
+      const res = await fetch(`${baseUrl}?action=get_all_row_json`);
+      const data = await res.json();
+      if (data.result === 'success' && Array.isArray(data.data)) {
+        const found = data.data.find(row => {
+          const rowNo = String(row['เลขที่ใบสั่งงาน'] || '').trim();
+          return normalizeJobCode(rowNo) === normalizedCode;
+        });
+        if (found) return found;
+      }
+    } catch (e) {
+      console.warn(`[LINE Bot] get_all_row_json failed on ${baseUrl}`);
+    }
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({ status: 'online', message: 'TN Messenger LINE Webhook Standalone Engine is active 🟢' });
@@ -50,49 +91,37 @@ export default async function handler(req, res) {
     console.log('[LINE Webhook Event Received]', events.length, 'events');
 
     for (const event of events) {
+      const replyToken = event.replyToken;
+
+      // Case 1: When user adds bot as a friend (follow event)
+      if (event.type === 'follow') {
+        console.log('[LINE Event]: Follow event received');
+        await sendLineReply(replyToken, WELCOME_GUIDE_TEXT);
+        continue;
+      }
+
+      // Case 2: When user sends a non-text message (sticker, image, video, file, location, etc.)
+      if (event.type === 'message' && event.message && event.message.type !== 'text') {
+        console.log('[LINE Event]: Non-text message type received:', event.message.type);
+        await sendLineReply(replyToken, WELCOME_GUIDE_TEXT);
+        continue;
+      }
+
+      // Case 3: Text message
       if (event.type === 'message' && event.message && event.message.type === 'text') {
-        const replyToken = event.replyToken;
         const inputText = (event.message.text || '').trim();
         console.log('[LINE User Input]:', inputText);
 
         const normalized = normalizeJobCode(inputText);
 
+        // Case 3a: Text is NOT a job number (e.g. "สวัสดี", "ขอบคุณ", "กกก", "test")
         if (!normalized) {
-          await sendLineReply(replyToken,
-            'สวัสดีค่ะ ยินดีต้อนรับสู่บริการ TN Messenger 🎉\n\n' +
-            'กรุณาพิมพ์ เลขที่ใบสั่งงาน เพื่อตรวจสอบสถานะค่ะ\n' +
-            '(ตัวอย่าง: 0001 หรือ 25)'
-          );
+          await sendLineReply(replyToken, WELCOME_GUIDE_TEXT);
           continue;
         }
 
-        // 1. Try querying GAS by orderNo using GET action=get_task_by_id
-        let matchedJob = null;
-        try {
-          const gasRes = await fetch(`${GAS_URL}?action=get_task_by_id&data=${encodeURIComponent(JSON.stringify({ orderNo: normalized }))}`);
-          const gasData = await gasRes.json();
-          if (gasData.result === 'success' && gasData.data) {
-            matchedJob = gasData.data;
-          }
-        } catch (e) {
-          console.warn('[LINE Bot] get_task_by_id failed, trying all_row_json fallback');
-        }
-
-        // 2. Fallback: Search all rows if specific search returned nothing
-        if (!matchedJob) {
-          try {
-            const allRes = await fetch(`${GAS_URL}?action=get_all_row_json`);
-            const allData = await allRes.json();
-            if (allData.result === 'success' && Array.isArray(allData.data)) {
-              matchedJob = allData.data.find(row => {
-                const rowNo = String(row['เลขที่ใบสั่งงาน'] || '').trim();
-                return normalizeJobCode(rowNo) === normalized;
-              });
-            }
-          } catch (e) {
-            console.error('[LINE Bot] Fallback search error:', e);
-          }
-        }
+        // Case 3b: Text IS a valid job number (e.g. "9960", "0001", "18", "25")
+        const matchedJob = await fetchTaskFromGAS(normalized);
 
         if (!matchedJob) {
           await sendLineReply(replyToken,
