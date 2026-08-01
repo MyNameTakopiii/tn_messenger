@@ -84,7 +84,7 @@ export function getScannedTasks() {
     return {
       ...t,
       "เลขที่ใบสั่งงาน": t["เลขที่ใบสั่งงาน"] || orderNo,
-      _source: "scan"
+      _source: t._source || "scan"
     };
   });
 }
