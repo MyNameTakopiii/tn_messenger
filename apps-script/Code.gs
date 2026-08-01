@@ -1172,7 +1172,8 @@ function getLatestStatusOfJob(rowObj) {
 }
 
 function sendLineReply(replyToken, text) {
-  const lineChannelAccessToken = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN');
+  const rawToken = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN') || '';
+  const lineChannelAccessToken = rawToken.trim();
   if (!lineChannelAccessToken) {
     console.error('LINE_CHANNEL_ACCESS_TOKEN is not set, cannot reply');
     return;
@@ -1199,11 +1200,12 @@ function sendLineReply(replyToken, text) {
   };
 
   const response = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', options);
-  console.log('LINE Reply Response: ' + response.getContentText());
+  console.log('LINE Reply Response (' + response.getResponseCode() + '): ' + response.getContentText());
 }
 
 function sendLinePushNotification(lineUserId, rowObj) {
-  const lineChannelAccessToken = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN');
+  const rawToken = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN') || '';
+  const lineChannelAccessToken = rawToken.trim();
   if (!lineChannelAccessToken) {
     console.warn('LINE_CHANNEL_ACCESS_TOKEN is not set, skipping push notification');
     return;
@@ -1374,6 +1376,55 @@ function testLineConfig() {
   console.log("LINE Test Report:\n" + JSON.stringify(report, null, 2));
   Logger.log(report);
   return report;
+}
+
+/**
+ * ฟังก์ชันทดสอบระบบ LINE Bot และพิมพ์ผลลัพธ์ลง Log แบบละเอียด
+ */
+function testLineBot() {
+  const secret = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_SECRET');
+  const token = PropertiesService.getScriptProperties().getProperty('LINE_CHANNEL_ACCESS_TOKEN');
+
+  console.log("=== 1. ตรวจสอบ Script Properties ===");
+  console.log("LINE_CHANNEL_SECRET:", secret ? "ตั้งค่าแล้ว (" + secret.length + " ตัวอักษร)" : "❌ ยังไม่ได้ตั้งค่า!");
+  console.log("LINE_CHANNEL_ACCESS_TOKEN:", token ? "ตั้งค่าแล้ว (" + token.length + " ตัวอักษร)" : "❌ ยังไม่ได้ตั้งค่า!");
+
+  if (!token) {
+    console.error("❌ ERROR: LINE_CHANNEL_ACCESS_TOKEN ยังไม่ได้ใส่ใน Script Properties ( Project Settings ⚙️ )");
+    return "❌ กรุณาตั้งค่า LINE_CHANNEL_ACCESS_TOKEN ใน Script Properties";
+  }
+
+  console.log("=== 2. ทดสอบเชื่อมต่อ LINE Bot API ===");
+  const options = {
+    method: 'get',
+    headers: { 'Authorization': 'Bearer ' + token.trim() },
+    muteHttpExceptions: true
+  };
+
+  try {
+    const response = UrlFetchApp.fetch('https://api.line.me/v2/bot/info', options);
+    const code = response.getResponseCode();
+    const body = response.getContentText();
+
+    if (code === 200) {
+      const data = JSON.parse(body);
+      console.log("✅ โทเค็นถูกต้องใช้งานได้จริง! เชื่อมโยงกับบอทชื่อ: " + data.displayName);
+    } else {
+      console.error("❌ โทเค็นไม่ถูกต้อง (HTTP " + code + "): " + body);
+      return "❌ โทเค็นไม่ถูกต้อง (HTTP " + code + ")";
+    }
+  } catch (err) {
+    console.error("❌ เกิดข้อผิดพลาดเชื่อมต่อ LINE: " + err.message);
+    return "❌ เชื่อมต่อ LINE ไม่ได้";
+  }
+
+  console.log("=== 3. ทดสอบการค้นหาใบงาน ===");
+  const sheet = getOrderSheet_();
+  const lastRow = sheet.getLastRow();
+  console.log("จำนวนแถวในใบสั่งงาน:", lastRow);
+
+  console.log("✅ การทดสอบสำเร็จสมบูรณ์! พร้อมใช้งาน");
+  return "✅ การทดสอบสำเร็จสมบูรณ์! พร้อมใช้งาน";
 }
 
 function logAttendance(data) {
