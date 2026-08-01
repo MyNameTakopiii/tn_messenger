@@ -9,6 +9,7 @@
     { "src": "/customer_workorder.html", "dest": "/customer/customer_workorder.html" },
     { "src": "/tracking.html", "dest": "/customer/tracking.html" },
     { "src": "/tracking_2.html", "dest": "/customer/tracking_2.html" },
+    { "src": "/api/line", "dest": "/api/line.js" },
     { "src": "/.*", "dest": "/404.html" }
   ]
 }
