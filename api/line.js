@@ -10,7 +10,10 @@ export default async function handler(req, res) {
     try {
       const payload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
 
-      // Forward to Google Apps Script and WAIT for completion so Vercel container stays alive
+      // 1. Send 200 OK to LINE immediately (< 50ms) to prevent LINE timeout (1000ms limit)
+      res.status(200).json({ result: 'success' });
+
+      // 2. Await GAS fetch after res.status(200) to keep Node event loop alive until GAS finishes
       const gasRes = await fetch(scriptUrl, {
         method: 'POST',
         headers: {
@@ -22,11 +25,10 @@ export default async function handler(req, res) {
 
       const gasText = await gasRes.text();
       console.log('GAS Forward Response:', gasText);
-
-      return res.status(200).json({ result: 'success' });
+      return;
     } catch (err) {
       console.error('LINE Proxy Error:', err);
-      return res.status(200).json({ result: 'success' });
+      return;
     }
   }
 
