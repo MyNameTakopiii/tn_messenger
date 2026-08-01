@@ -796,6 +796,24 @@ async function handleAssignWorkOrder(rawOrderNo, allowReassign = false) {
     showAssignToast(`✅ มอบหมายใบสั่งงาน ${paddedOrder} ให้ ${empName} เรียบร้อย!`, "success");
     addAssignLogItem(cleanOrderId, empName, selectedEmployee.id);
 
+    // Write assigned task to local storage cache for instant UI rendering
+    try {
+      const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+      const today = new Date().toISOString().split('T')[0];
+      storedTasks[cleanOrderId] = {
+        ...storedTasks[cleanOrderId],
+        'เลขที่ใบสั่งงาน': cleanOrderId,
+        orderNo: cleanOrderId,
+        'ลูกค้า': 'ใบสั่งงาน #' + cleanOrderId.padStart(4, '0'),
+        'โครงการ': '-',
+        'รหัสพนักงานที่มอบหมาย': selectedEmployee.id,
+        'ชื่อพนักงาน': empName,
+        scan_date: today,
+        _source: 'assigned'
+      };
+      localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
+    } catch (_) {}
+
     const manualInput = document.getElementById("assignManualOrderNo");
     if (manualInput) manualInput.value = "";
 

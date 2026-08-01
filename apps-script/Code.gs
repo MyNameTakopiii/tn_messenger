@@ -350,11 +350,11 @@ function getEmployeeList() {
 function findColIndex_(headers, candidates) {
   for (var c = 0; c < candidates.length; c++) {
     var idx = headers.findIndex(function (h) {
-      return String(h).toLowerCase() === candidates[c].toLowerCase();
+      return String(h).toLowerCase().trim() === candidates[c].toLowerCase().trim();
     });
     if (idx >= 0) return idx;
   }
-  return 0;
+  return -1;
 }
 
 // ─── Tasks by employee ──────────────────────────────────────────────────────
@@ -363,7 +363,7 @@ function getTasksByEmployee(data) {
   data = data || {};
   const employeeId = String(data.employeeId || data.id || '').trim();
   if (!employeeId) {
-    return { result: 'error', message: 'employeeId required' };
+    return { result: 'success', data: [] };
   }
 
   const dateFilter = (data.date || '').toString().trim();
@@ -375,8 +375,9 @@ function getTasksByEmployee(data) {
   }
 
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const assignIdx = headers.indexOf(ASSIGNED_COL);
-  const empIdIdx = findColIndex_(headers, ['รหัสพนักงาน', 'id', 'ID']);
+  const assignIdx = findColIndex_(headers, [ASSIGNED_COL, 'รหัสพนักงานที่มอบหมาย', 'assignedEmployeeId']);
+  const empIdIdx = findColIndex_(headers, ['id', 'ID', 'รหัสพนักงาน']);
+  const messengerNameIdx = findColIndex_(headers, ['ชื่อพนักงาน', 'messengerName', 'พนักงานจัดส่ง']);
 
   // OPTIMIZATION: Read only recent rows (last 500 rows) instead of 9,000+ rows for 10x faster speed
   const maxSearchRows = 500;
@@ -385,13 +386,19 @@ function getTasksByEmployee(data) {
 
   const allData = sheet.getRange(startRow, 1, numRows, headers.length).getValues();
   const tasks = [];
+  const empIdLower = employeeId.toLowerCase();
 
   for (var i = allData.length - 1; i >= 0; i--) {
     const row = allData[i];
-    const assigned = assignIdx >= 0 ? String(row[assignIdx] || '').trim() : '';
-    const empIdVal = empIdIdx >= 0 ? String(row[empIdIdx] || '').trim() : '';
+    const assigned = assignIdx >= 0 ? String(row[assignIdx] || '').trim().toLowerCase() : '';
+    const empIdVal = empIdIdx >= 0 ? String(row[empIdIdx] || '').trim().toLowerCase() : '';
+    const messengerVal = messengerNameIdx >= 0 ? String(row[messengerNameIdx] || '').trim().toLowerCase() : '';
 
-    if (assigned !== employeeId && empIdVal !== employeeId) continue;
+    const isMatch = (assigned && assigned === empIdLower) ||
+                    (empIdVal && empIdVal === empIdLower) ||
+                    (messengerVal && messengerVal.includes(empIdLower));
+
+    if (!isMatch) continue;
 
     const obj = rowToObject_(headers, row);
     const collectDate = formatDateForFilter_(String(obj['วันที่เก็บเอกสาร'] || '').trim());

@@ -1,5 +1,5 @@
 // src/js/tn-employee-tasks.js
-import { SCRIPT_URL_ORDER } from '../config/api.js';
+import { SCRIPT_URL_ORDER, jsonp } from '../config/api.js';
 
 export function todayISO() {
   return new Date().toISOString().split("T")[0];
@@ -10,7 +10,7 @@ export function getEmployeeId() {
     const raw = localStorage.getItem("tn_employee_user");
     if (!raw || raw === "undefined") return "";
     const user = JSON.parse(raw);
-    return user ? (user.id || "") : "";
+    return user ? String(user.id || user.username || "").trim() : "";
   } catch (_) {
     return "";
   }
@@ -20,23 +20,39 @@ export async function fetchAssignedTasks(date) {
   const employeeId = getEmployeeId();
   if (!employeeId) return [];
 
-  const params = new URLSearchParams({
-    action: "get_tasks_by_employee",
-    data: JSON.stringify({ employeeId, date: date || "" }),
-  });
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
-
   try {
-    const res = await fetch(`${SCRIPT_URL_ORDER}?${params}`, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    const json = await res.json();
-    if (json.result === "success" && Array.isArray(json.data)) {
-      return json.data.map((t) => ({ ...t, _source: "assigned" }));
+    // Use jsonp helper to bypass CORS policy on Google Apps Script Web App GET requests
+    const res = await jsonp(
+      SCRIPT_URL_ORDER,
+      {
+        action: "get_tasks_by_employee",
+        data: { employeeId, date: date || "" }
+      },
+      15000
+    );
+
+    if (res && res.result === "success" && Array.isArray(res.data)) {
+      const assignedTasks = res.data.map((t) => ({ ...t, _source: "assigned" }));
+      
+      // Update local storage cache with assigned tasks for offline/instant availability
+      const stored = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
+      const today = todayISO();
+      assignedTasks.forEach((t) => {
+        const key = String(t["เลขที่ใบสั่งงาน"] || t.orderNo || t.id || "").replace(/^0+/, "");
+        if (key) {
+          stored[key] = {
+            ...stored[key],
+            ...t,
+            scan_date: t.scan_date || today,
+            _source: "assigned"
+          };
+        }
+      });
+      localStorage.setItem("tasks_employee", JSON.stringify(stored));
+
+      return assignedTasks;
     }
   } catch (err) {
-    clearTimeout(timeoutId);
     console.warn("fetchAssignedTasks error/timeout:", err);
   }
   return [];

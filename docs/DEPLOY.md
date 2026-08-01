@@ -29,7 +29,7 @@ Copy sections from [`Code.gs`](Code.gs) into your project:
 2. Extend `doGet` / router with new actions:
    - `get_rows_meta`
    - `get_rows_paginated`
-   - `get_employee_list`
+   - `get_employee_list` 
    - `get_tasks_by_employee`
    - `get_cover_report`
 3. In your existing **insertJob** handler, write `payload.assignedEmployeeId` to column `รหัสพนักงานที่มอบหมาย`
