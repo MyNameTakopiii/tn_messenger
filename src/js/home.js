@@ -204,11 +204,12 @@ function setupAttendanceListeners() {
         // Calculate stats for Google Sheets log
         try {
           const tasks = await loadMergedTasks();
-          let success = 0, cancel = 0, pending = 0;
+          let success = 0, postpone = 0, cancel = 0, pending = 0;
           tasks.forEach(t => {
-            const st = JSON.stringify(t);
-            if (st.includes('สำเร็จ') || st.includes('เรียบร้อย')) success++;
-            else if (st.includes('ยกเลิก') || st.includes('ล้มเหลว')) cancel++;
+            const cat = getTaskCategory(t);
+            if (cat === 'success') success++;
+            else if (cat === 'postpone') postpone++;
+            else if (cat === 'cancel') cancel++;
             else pending++;
           });
 
@@ -223,8 +224,9 @@ function setupAttendanceListeners() {
             clockOutTime: nowStr,
             totalHours: totalHoursText,
             totalJobs: tasks.length,
-            successJobs: success,
             pendingJobs: pending,
+            successJobs: success,
+            postponeJobs: postpone,
             cancelJobs: cancel
           }).catch(err => console.warn("Log clock-out error:", err));
         } catch (_) {}
@@ -233,6 +235,34 @@ function setupAttendanceListeners() {
       initAttendanceUI();
     });
   }
+}
+
+function getTaskCategory(t) {
+  const latestStatus = String(
+    t["ผลการวิ่งงาน 3: สถานะ"] || 
+    t["ผลการวิ่งงาน 2: สถานะ"] || 
+    t["ผลการวิ่งงาน 1: สถานะ"] || 
+    t["สถานะ"] || 
+    t.status || 
+    ""
+  ).trim();
+
+  if (latestStatus === "สำเร็จ" || latestStatus.includes("สำเร็จ") || latestStatus.includes("เรียบร้อย")) {
+    return "success";
+  }
+  if (latestStatus.includes("เลื่อน") || latestStatus.includes("ไม่รับสาย")) {
+    return "postpone";
+  }
+  if (latestStatus.includes("ยกเลิก") || latestStatus.includes("ซ้ำ") || latestStatus.includes("ล้มเหลว")) {
+    return "cancel";
+  }
+
+  const fullStr = JSON.stringify(t);
+  if (fullStr.includes("สำเร็จ") || fullStr.includes("เรียบร้อย")) return "success";
+  if (fullStr.includes("เลื่อน") || fullStr.includes("ไม่รับสาย")) return "postpone";
+  if (fullStr.includes("ยกเลิก") || fullStr.includes("ซ้ำ") || fullStr.includes("ล้มเหลว")) return "cancel";
+
+  return "pending";
 }
 
 async function openSummaryModal() {
@@ -284,28 +314,28 @@ async function openSummaryModal() {
     const tasks = await loadMergedTasks();
     let total = tasks.length;
     let success = 0;
+    let postpone = 0;
     let cancel = 0;
     let pending = 0;
 
     tasks.forEach(t => {
-      const statusText = JSON.stringify(t);
-      if (statusText.includes('สำเร็จ') || statusText.includes('เรียบร้อย')) {
-        success++;
-      } else if (statusText.includes('ยกเลิก') || statusText.includes('ล้มเหลว')) {
-        cancel++;
-      } else {
-        pending++;
-      }
+      const cat = getTaskCategory(t);
+      if (cat === 'success') success++;
+      else if (cat === 'postpone') postpone++;
+      else if (cat === 'cancel') cancel++;
+      else pending++;
     });
 
     const elTotal = document.getElementById('statTotalJobs');
-    const elSuccess = document.getElementById('statSuccessJobs');
     const elPending = document.getElementById('statPendingJobs');
+    const elSuccess = document.getElementById('statSuccessJobs');
+    const elPostpone = document.getElementById('statPostponeJobs');
     const elCancel = document.getElementById('statCancelJobs');
 
     if (elTotal) elTotal.textContent = total;
-    if (elSuccess) elSuccess.textContent = success;
     if (elPending) elPending.textContent = pending;
+    if (elSuccess) elSuccess.textContent = success;
+    if (elPostpone) elPostpone.textContent = postpone;
     if (elCancel) elCancel.textContent = cancel;
   } catch (err) {
     console.warn("Could not load task stats for modal:", err);

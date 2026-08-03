@@ -310,9 +310,10 @@ h2 {
   text-align: center;
 }
 
-.stat-card.total { border-color: #bfdbfe; background: #eff6ff; }
+.stat-card.total { grid-column: 1 / -1; border-color: #bfdbfe; background: #eff6ff; }
+.stat-card.pending { border-color: #cbd5e1; background: #f8fafc; }
 .stat-card.success { border-color: #a7f3d0; background: #ecfdf5; }
-.stat-card.pending { border-color: #fde68a; background: #fffbeb; }
+.stat-card.postpone { border-color: #fed7aa; background: #fff7ed; }
 .stat-card.cancel { border-color: #fecaca; background: #fef2f2; }
 
 .stat-num {
@@ -322,8 +323,9 @@ h2 {
 }
 
 .stat-card.total .stat-num { color: #2563eb; }
+.stat-card.pending .stat-num { color: #475569; }
 .stat-card.success .stat-num { color: #059669; }
-.stat-card.pending .stat-num { color: #d97706; }
+.stat-card.postpone .stat-num { color: #ea580c; }
 .stat-card.cancel .stat-num { color: #dc2626; }
 
 .stat-label {
