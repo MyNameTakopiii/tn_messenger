@@ -20,23 +20,35 @@ export async function fetchAssignedTasks(date) {
   const employeeId = getEmployeeId();
   if (!employeeId) return [];
 
+  const targetDate = date || todayISO();
+
   try {
     // Use jsonp helper to bypass CORS policy on Google Apps Script Web App GET requests
     const res = await jsonp(
       SCRIPT_URL_ORDER,
       {
         action: "get_tasks_by_employee",
-        data: { employeeId, date: date || "" }
+        data: { employeeId, date: targetDate }
       },
       15000
     );
 
     if (res && res.result === "success" && Array.isArray(res.data)) {
-      const assignedTasks = res.data.map((t) => ({ ...t, _source: "assigned" }));
+      const today = todayISO();
+      const assignedTasks = res.data
+        .map((t) => ({ ...t, _source: "assigned", scan_date: t.scan_date || today }))
+        .filter((t) => !t.scan_date || t.scan_date === today);
       
       // Update local storage cache with assigned tasks for offline/instant availability
       const stored = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
-      const today = todayISO();
+      
+      // Purge old days' tasks from local storage
+      Object.keys(stored).forEach((k) => {
+        if (stored[k] && stored[k].scan_date && stored[k].scan_date !== today) {
+          delete stored[k];
+        }
+      });
+
       assignedTasks.forEach((t) => {
         const key = String(t["เลขที่ใบสั่งงาน"] || t.orderNo || t.id || "").replace(/^0+/, "");
         if (key) {
@@ -71,7 +83,8 @@ export function getScannedTasks() {
   }
   let changed = false;
   for (const id in stored) {
-    if (stored[id] && stored[id].scan_date !== today) {
+    // Strictly keep only tasks from TODAY (งานวันต่อวัน)
+    if (!stored[id] || stored[id].scan_date !== today) {
       delete stored[id];
       changed = true;
     }
@@ -90,19 +103,25 @@ export function getScannedTasks() {
 }
 
 export function mergeTasks(serverTasks, scannedTasks) {
+  const today = todayISO();
   const map = new Map();
+
   scannedTasks.forEach((t) => {
+    if (t.scan_date && t.scan_date !== today) return;
     const key = String(t["เลขที่ใบสั่งงาน"] || t.orderNo || t.id || "").replace(/^0+/, "");
     if (key) {
-      map.set(key, { ...t, "เลขที่ใบสั่งงาน": t["เลขที่ใบสั่งงาน"] || key });
+      map.set(key, { ...t, "เลขที่ใบสั่งงาน": t["เลขที่ใบสั่งงาน"] || key, scan_date: today });
     }
   });
+
   serverTasks.forEach((t) => {
+    if (t.scan_date && t.scan_date !== today) return;
     const key = String(t["เลขที่ใบสั่งงาน"] || t.orderNo || t.id || "").replace(/^0+/, "");
     if (key) {
-      map.set(key, { ...t, "เลขที่ใบสั่งงาน": t["เลขที่ใบสั่งงาน"] || key });
+      map.set(key, { ...t, "เลขที่ใบสั่งงาน": t["เลขที่ใบสั่งงาน"] || key, scan_date: today });
     }
   });
+
   return Array.from(map.values());
 }
 

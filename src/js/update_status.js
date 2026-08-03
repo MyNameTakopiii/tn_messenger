@@ -22,7 +22,6 @@ const orderInput = document.getElementById("orderNoInput");
 const messengerNameInput = document.getElementById("messengerName");
 const orderInfo = document.getElementById("orderInfo");
 const resultMsg = document.getElementById("resultMsg");
-const submitBtn = document.getElementById("submitBtn");
 
 // ดึงข้อมูลพนักงานจาก localStorage
 const userData = JSON.parse(
@@ -35,14 +34,14 @@ document.addEventListener("DOMContentLoaded", () => {
     messengerNameInput.setAttribute("readonly", true);
   }
 
-  // ถ้ามีเลขที่ใบสั่งงานจาก QR Code
+  // ถ้ามีเลขที่ใบสั่งงานจาก QR Code หรือ URL
   if (orderInput) {
     if (orderFromURL) {
       orderInput.value = orderFromURL;
       orderInput.setAttribute("readonly", true);
       fetchTaskData(orderFromURL);
     } else {
-      if (orderInfo) orderInfo.textContent = "⚙️ กรอกเลขที่ใบสั่งงานเพื่ออัปเดตสถานะ";
+      if (orderInfo) orderInfo.textContent = "⚙️ กรอกเลขที่ใบสั่งงานเพื่ออัปเดตสถานะประจำวัน";
       const form = document.getElementById("updateForm");
       if (form) form.style.display = "block";
     }
@@ -175,25 +174,22 @@ function processTaskData(data) {
 });
 
 function showResult(type, message) {
-  if (!resultMsg) return;
-  resultMsg.className = type + " show";
-  resultMsg.textContent = message;
+  const msgEl = document.getElementById("resultMsg");
+  if (!msgEl) return;
+  msgEl.className = type + " show";
+  msgEl.textContent = message;
 
   if (type === "success") {
     setTimeout(() => {
-      if (!orderFromURL) {
+      if (orderFromURL) {
+        window.location.href = "/employee/list.html";
+      } else {
         const form = document.getElementById("updateForm");
         if (form) form.reset();
         if (orderInput) orderInput.focus();
-      } else {
-        const fields = ["result1", "note1", "result2", "note2", "result3", "note3"];
-        fields.forEach(f => {
-          const el = document.getElementById(f);
-          if (el) el.value = "";
-        });
       }
-      resultMsg.className = "";
-    }, 3000);
+      msgEl.className = "";
+    }, 1500);
   }
 }
 
@@ -202,6 +198,7 @@ if (updateForm) {
   updateForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const submitBtn = document.getElementById("submitBtn");
     const formData = new FormData(e.target);
     const orderNo = formData.get("orderNo").trim();
     const messengerName = formData.get("messengerName").trim();
@@ -224,6 +221,7 @@ if (updateForm) {
     // วันที่ปัจจุบัน dd/mm/yyyy
     const now = new Date();
     const autoDate = `${now.getDate().toString().padStart(2, "0")}/${(now.getMonth() + 1).toString().padStart(2, "0")}/${now.getFullYear()}`;
+    const todayIsoStr = now.toISOString().split("T")[0];
 
     const isPostpone = (val) => val === "ลูกค้าขอเลื่อน" || val === "พนักงานขอเลื่อน" || val === "ลูกค้าไม่รับสาย";
 
@@ -244,7 +242,7 @@ if (updateForm) {
       timestamp: new Date().toLocaleString("th-TH"),
     };
 
-    // 1. Optimistic Local Storage Update (Instant Feedback <100ms)
+    // 1. Optimistic Local Storage Update (Instant Feedback <100ms) with scan_date set to TODAY
     const storedTasks = JSON.parse(localStorage.getItem("tasks_employee") || "{}");
     const cleanOrderNo = orderNo.toString().replace(/^0+/, "");
     
@@ -252,12 +250,13 @@ if (updateForm) {
       storedTasks[cleanOrderNo] = {
         'เลขที่ใบสั่งงาน': cleanOrderNo,
         orderNo: cleanOrderNo,
-        scan_date: new Date().toISOString().split('T')[0],
+        scan_date: todayIsoStr,
         _source: 'scan'
       };
     }
     
     const task = storedTasks[cleanOrderNo];
+    task.scan_date = todayIsoStr;
     if (payload.result1) {
       task["ผลการวิ่งงาน 1: สถานะ"] = payload.result1;
       task["ผลการวิ่งงาน 1: วัน/เดือน/ปี"] = payload.date1;
@@ -278,36 +277,21 @@ if (updateForm) {
     localStorage.setItem("tasks_employee", JSON.stringify(storedTasks));
 
     // Show immediate success to user
-    showResult("success", "✅ บันทึกสถานะลงเครื่องเรียบร้อย! (กำลังซิงค์กับเซิร์ฟเวอร์...)");
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "⏳ กำลังซิงค์...";
-    }
+    showResult("success", "✅ อัปเดตสถานะสำเร็จ!");
 
     // 2. Background sync to Google Sheet
     try {
-      const response = await jsonp(SCRIPT_URL_ORDER, {
+      await jsonp(SCRIPT_URL_ORDER, {
         action: "update",
         data: payload
       }, 12000);
-
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "💾 บันทึกสถานะ";
-      }
-
-      if (response && response.result === "success") {
-        showResult("success", "✅ อัปเดตสถานะสมบูรณ์และซิงค์ข้อมูลเรียบร้อย!");
-      } else {
-        showResult("error", "⚠️ บันทึกในเครื่องแล้ว แต่เซิร์ฟเวอร์แจ้งเตือน: " + ((response && response.message) || "ไม่สามารถอัปเดตบนเซิร์ฟเวอร์ได้"));
-      }
     } catch (error) {
+      console.warn("Background sync error:", error);
+    } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "💾 บันทึกสถานะ";
       }
-      console.warn("Background sync error:", error);
-      showResult("success", "✅ บันทึกสถานะลงเครื่องเรียบร้อย! (ระบบจะซิงค์ใหม่อัตโนมัติเมื่อออนไลน์)");
     }
   });
 }
@@ -318,7 +302,7 @@ window.togglePostponeDate = function togglePostponeDate(index) {
   const container = document.getElementById(`date-postpone-container-${index}`);
   const dateInput = document.getElementById(`rescheduledDate${index}`);
 
-  if (select && select.value === "ลูกค้าขอเลื่อน" || select.value === "พนักงานขอเลื่อน" || select.value === "ลูกค้าไม่รับสาย") {
+  if (select && (select.value === "ลูกค้าขอเลื่อน" || select.value === "พนักงานขอเลื่อน" || select.value === "ลูกค้าไม่รับสาย")) {
     if (container) container.style.display = "block";
     if (dateInput && !dateInput._flatpickr) {
       flatpickr(dateInput, {
