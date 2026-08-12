@@ -116,6 +116,9 @@ function handleRequest(e) {
       case 'login_employee':
         result = loginEmployee(dataObj);
         break;
+      case 'reset_password_employee':
+        result = resetPasswordEmployee(dataObj);
+        break;
       case 'insert_news':
         result = insertNews(dataObj);
         break;
@@ -1014,6 +1017,61 @@ function hash_password(password) {
     const v = (b < 0 ? b + 256 : b).toString(16);
     return v.padStart(2, '0');
   }).join('');
+}
+
+function resetPasswordEmployee(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('employee_user');
+  if (!sheet) {
+    return { result: 'error', message: 'ไม่พบชีต employee_user' };
+  }
+
+  const email = String(data.email || '').trim().toLowerCase();
+  const newPassword = String(data.newPassword || '').trim();
+
+  if (!email || !newPassword) {
+    return { result: 'error', message: 'กรุณากรอกอีเมลและรหัสผ่านใหม่ให้ครบถ้วน' };
+  }
+
+  if (newPassword.length < 6) {
+    return { result: 'error', message: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร' };
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return { result: 'error', message: 'ไม่พบข้อมูลผู้ใช้ในระบบ' };
+  }
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  let emailIdx = headers.indexOf('email');
+  if (emailIdx === -1) {
+    emailIdx = headers.findIndex(h => String(h).toLowerCase() === 'email');
+  }
+  const passIdx = headers.indexOf('password');
+
+  if (emailIdx === -1 || passIdx === -1) {
+    return { result: 'error', message: 'โครงสร้างชีต employee_user ไม่ถูกต้อง' };
+  }
+
+  const rows = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+  let userRowIndex = -1;
+
+  for (let i = 0; i < rows.length; i++) {
+    const userEmail = String(rows[i][emailIdx] || '').trim().toLowerCase();
+    if (userEmail === email) {
+      userRowIndex = i + 2;
+      break;
+    }
+  }
+
+  if (userRowIndex === -1) {
+    return { result: 'error', message: 'ไม่พบอีเมลนี้ในระบบพนักงาน' };
+  }
+
+  const newPasswordHash = hash_password(newPassword);
+  sheet.getRange(userRowIndex, passIdx + 1).setValue(newPasswordHash);
+
+  return { result: 'success', message: 'เปลี่ยนรหัสผ่านสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที' };
 }
 
 // ─── LINE OA Customer Bot Integration ────────────────────────────────────────
