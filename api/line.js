@@ -1,8 +1,8 @@
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || '7E7yx2m+fhOupAMs3UQq/O0J4KVRTIOtbTxCqBw9EfX8laF6a7y06kJjAbXizRBB/qEHnfdzMuXibssLIRRYCeNwD9A7RYxHRYD2+ig+7mHx8PVq5+2NCPRrYIGyWUXEWtY6+iA9NjKn4GZYc5rfsAdB04t89/1O/w1cDnyilFU=';
 
 const GAS_URLS = [
-  process.env.VITE_SCRIPT_URL_ORDER || 'https://script.google.com/macros/s/AKfycbxcVeMiUy1gy95f-1x6bhPHuguyL8nH-gpe98eOfgyMC_FKfYYEGdRTr6Mp_tP-HPEF/exec',
-  'https://script.google.com/macros/s/AKfycbwutGjM8fg__QRCBYBiDsCJ8ttkQ-97v8gER_C_W7VB4TG5-vvX5doUXlbGc5bvZYM5/exec'
+  process.env.VITE_SCRIPT_URL_ORDER || 'https://script.google.com/macros/s/AKfycbzfZ4-krmya1XPtNjmwFRKjrwP2g0fyPBzHORIvAFGqfA_50yjWDvb_ycSkqzCstVuI/exec',
+  'https://script.google.com/macros/s/AKfycbzfZ4-krmya1XPtNjmwFRKjrwP2g0fyPBzHORIvAFGqfA_50yjWDvb_ycSkqzCstVuI/exec'
 ];
 
 const WELCOME_GUIDE_TEXT = 

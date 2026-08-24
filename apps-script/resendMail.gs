@@ -43,7 +43,7 @@ function resendMail(orderNo) {
       </p>
     </div>
   `;
-
+  
   MailApp.sendEmail({
     to: email,
     subject,
